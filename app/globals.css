@@ -5,12 +5,15 @@
 @tailwind utilities;
 
 :root {
-  --yl-green: #72cf49;
-  --yl-green-deep: #2f8a3a;
-  --yl-berry: #ee4f7d;
-  --yl-yellow: #ffc84d;
-  --yl-mint: #efffe8;
-  --yl-ink: #1f3b2a;
+  --yl-primary: #960953;
+  --yl-primary-deep: #6f073e;
+  --yl-pink: #f7b9d4;
+  --yl-yellow-green: #8dc63f;
+  --yl-mint: #fff3fa;
+  --yl-ink: #3f1030;
+  --yl-green: #8dc63f;
+  --yl-berry: #f7b9d4;
+  --yl-yellow: #ffd45f;
 }
 
 * {
@@ -28,7 +31,7 @@ body {
 body {
   font-family: "Nunito", "Segoe UI", sans-serif;
   color: var(--yl-ink);
-  background: radial-gradient(circle at 10% 10%, #ffffff 0%, #ecfff5 36%, #dcf8ea 100%);
+  background: radial-gradient(circle at 10% 10%, #ffffff 0%, #ffeef7 38%, #fbd8e9 100%);
 }
 
 h1,

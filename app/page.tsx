@@ -256,10 +256,10 @@ export default function Page() {
 
   return (
     <>
-      <main className="fixed inset-0 overflow-hidden bg-[radial-gradient(circle_at_15%_5%,#ffffff_0%,#ebffe8_35%,#d8f7e8_100%)]">
+      <main className="fixed inset-0 overflow-hidden bg-[radial-gradient(circle_at_15%_5%,#ffffff_0%,#ffeef8_35%,#f8d5e8_100%)]">
         <div className="h-full w-full flex items-center justify-center">
           <div
-            className="relative overflow-hidden rounded-[2rem] bg-white/95 shadow-[0_22px_60px_rgba(28,102,44,0.32)] ring-1 ring-[#d4ecc7]"
+            className="relative overflow-hidden rounded-[2rem] bg-white/95 shadow-[0_22px_60px_rgba(150,9,83,0.28)] ring-1 ring-[#f4c2db]"
             style={{
               width: BASE_WIDTH,
               height: BASE_HEIGHT,
