@@ -10,7 +10,7 @@ const MISSION_TOPPINGS = ["🍒", "🍓", "🥄", "🫐", "🍫"] as const;
 type MissionTopping = (typeof MISSION_TOPPINGS)[number];
 type FallingEmoji = "🍨" | MissionTopping;
 
-type FallingItem = { id: number; x: number; y: number; v: number; emoji: FallingEmoji };
+type FallingItem = { id: number; x: number; y: number; v: number; emoji?: FallingEmoji; image?: string };
 type Pop = { id: number; x: number; y: number; text: string; born: number };
 
 const GAME_BG_CANDIDATES = [
@@ -393,14 +393,20 @@ export default function Game({
 
     spawnRef.current = window.setInterval(() => {
       if (pausedRef.current) return;
-      const emoji: FallingEmoji =
-        mode === "mission"
-          ? MISSION_TOPPINGS[Math.floor(Math.random() * MISSION_TOPPINGS.length)]
-          : "🍨";
+      let itemData: { emoji?: FallingEmoji; image?: string };
+      
+      if (mode === "mission") {
+        itemData = { emoji: MISSION_TOPPINGS[Math.floor(Math.random() * MISSION_TOPPINGS.length)] };
+      } else {
+        // 70% chance for ice cream, 30% chance for gummy bear
+        itemData = Math.random() < 0.7 
+          ? { emoji: "🍨" }
+          : { image: "gummy-bear.png" };
+      }
 
       setItems((v) => [
         ...v,
-        { id: idRef.current++, x: Math.random() * 90 + 5, y: -5, v: 1.2 + Math.random() * 2.4, emoji },
+        { id: idRef.current++, x: Math.random() * 90 + 5, y: -5, v: 1.2 + Math.random() * 2.4, ...itemData },
       ]);
     }, 900);
 
@@ -724,9 +730,13 @@ export default function Game({
             <div
               key={item.id}
               style={{ left: `${item.x}%`, top: `${item.y}%` }}
-              className="absolute text-4xl"
+              className="absolute text-4xl flex items-center justify-center w-8 h-8"
             >
-              {item.emoji}
+              {item.image ? (
+                <img src={`/${item.image}`} alt="falling item" draggable={false} className="w-8 h-8" />
+              ) : (
+                item.emoji
+              )}
             </div>
           ))}
 
