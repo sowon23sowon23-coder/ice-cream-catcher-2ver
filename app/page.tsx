@@ -439,14 +439,14 @@ export default function Page() {
     store: string
   ) => {
     const nickname_key = normalizeNick(nicknameDisplay);
-    let existingBest = 0;
+    let existingBestToday = 0;
 
     try {
       let existingQuery = supabase
         .from("leaderboard_best_v2")
-        .select("score")
+        .select("score,updated_at")
         .eq("nickname_key", nickname_key)
-        .order("score", { ascending: false })
+        .order("updated_at", { ascending: false })
         .limit(1);
 
       if (store !== "__ALL__") {
@@ -455,14 +455,19 @@ export default function Page() {
 
       const { data: existingData, error: existingError } = await existingQuery;
       if (!existingError && existingData && existingData.length > 0) {
-        existingBest = Number(existingData[0]?.score ?? 0);
+        const latest = existingData[0] as { score?: number; updated_at?: string };
+        const latestAt = latest?.updated_at ? new Date(latest.updated_at) : null;
+        const todayStart = new Date(startOfTodayLocalISO());
+        const isToday = !!latestAt && latestAt >= todayStart;
+
+        existingBestToday = isToday ? Number(latest?.score ?? 0) : 0;
       }
     } catch (e) {
       console.error("Fetch existing best error:", e);
     }
 
-    if (score <= existingBest) {
-      return existingBest;
+    if (score <= existingBestToday) {
+      return existingBestToday;
     }
 
     const attempts = [
