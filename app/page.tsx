@@ -28,113 +28,70 @@ function normalizeNick(raw: string) {
 async function fetchMyBestScore(nicknameDisplay: string, selectedStore: string) {
   const key = normalizeNick(nicknameDisplay);
 
-  // If selectedStore is "__ALL__", get best score across all stores
-  if (selectedStore === "__ALL__") {
-    const attempts = [
-      () =>
-        supabase
-          .from("leaderboard_best_v2")
-          .select("score,nickname_display,character,store")
-          .eq("nickname_key", key)
-          .order("score", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      () =>
-        supabase
-          .from("leaderboard_best_v2")
-          .select("score,nickname_display,store")
-          .eq("nickname_key", key)
-          .order("score", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      () =>
-        supabase
-          .from("leaderboard_best_v2")
-          .select("score,nickname_display,character")
-          .eq("nickname_key", key)
-          .order("score", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      () =>
-        supabase
-          .from("leaderboard_best_v2")
-          .select("score,nickname_display")
-          .eq("nickname_key", key)
-          .order("score", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-    ];
+  try {
+    let query = supabase
+      .from("leaderboard_best_v2")
+      .select("score,nickname_display,character,store")
+      .eq("nickname_key", key)
+      .order("score", { ascending: false })
+      .limit(1);
 
-    let data: any = null;
-    let error: any = null;
-    for (const attempt of attempts) {
-      const res = await attempt();
-      data = res.data;
-      error = res.error;
-      if (!error) break;
+    if (selectedStore !== "__ALL__") {
+      query = query.eq("store", selectedStore);
+    }
+
+    let { data, error } = await query;
+
+    // Fallback attempts if first query fails
+    if (error) {
+      const fallbacks = [
+        () =>
+          supabase
+            .from("leaderboard_best_v2")
+            .select("score,nickname_display,store")
+            .eq("nickname_key", key)
+            .order("score", { ascending: false })
+            .limit(1),
+        () =>
+          supabase
+            .from("leaderboard_best_v2")
+            .select("score,nickname_display,character")
+            .eq("nickname_key", key)
+            .order("score", { ascending: false })
+            .limit(1),
+        () =>
+          supabase
+            .from("leaderboard_best_v2")
+            .select("score,nickname_display")
+            .eq("nickname_key", key)
+            .order("score", { ascending: false })
+            .limit(1),
+      ];
+
+      for (const fallback of fallbacks) {
+        const result = await fallback();
+        if (!result.error) {
+          data = result.data;
+          error = null;
+          break;
+        }
+      }
     }
 
     if (error) throw error;
-    if (!data) return undefined;
+    if (!data || data.length === 0) return undefined;
 
-    const row = data as { score: number; nickname_display: string; character?: CharId | null; store?: string | null };
+    const row = data[0] as { score: number; nickname_display: string; character?: CharId | null; store?: string | null };
     return {
       score: row.score,
       display: row.nickname_display,
       character: row.character ?? undefined,
-      store: row.store ?? "Unknown",
+      store: row.store ?? (selectedStore === "__ALL__" ? "Unknown" : selectedStore),
     };
+  } catch (err) {
+    console.error("Fetch best score error:", err);
+    throw err;
   }
-
-  // Original logic for specific store
-  const attempts = [
-    () =>
-      supabase
-        .from("leaderboard_best_v2")
-        .select("score,nickname_display,character,store")
-        .eq("nickname_key", key)
-        .eq("store", selectedStore)
-        .maybeSingle(),
-    () =>
-      supabase
-        .from("leaderboard_best_v2")
-        .select("score,nickname_display,store")
-        .eq("nickname_key", key)
-        .eq("store", selectedStore)
-        .maybeSingle(),
-    () =>
-      supabase
-        .from("leaderboard_best_v2")
-        .select("score,nickname_display,character")
-        .eq("nickname_key", key)
-        .maybeSingle(),
-    () =>
-      supabase
-        .from("leaderboard_best_v2")
-        .select("score,nickname_display")
-        .eq("nickname_key", key)
-        .maybeSingle(),
-  ];
-
-  let data: any = null;
-  let error: any = null;
-  for (const attempt of attempts) {
-    const res = await attempt();
-    data = res.data;
-    error = res.error;
-    if (!error) break;
-  }
-
-  if (error) throw error;
-  if (!data) return undefined;
-
-  const row = data as { score: number; nickname_display: string; character?: CharId | null; store?: string | null };
-  return {
-    score: row.score,
-    display: row.nickname_display,
-    character: row.character ?? undefined,
-    store: row.store ?? selectedStore,
-  };
 }
 
 function startOfTodayLocalISO() {
@@ -178,154 +135,138 @@ export default function Page() {
   const fetchTop20 = async (m: LeaderMode, store: string) => {
     setLbLoading(true);
 
-    const attempts = [
-      () => {
-        let q = supabase
-          .from("leaderboard_best_v2")
-          .select("nickname_key,nickname_display,score,updated_at,character,store");
-        
-        if (store !== "__ALL__") {
-          q = q.eq("store", store);
-        }
-        
-        q = q.order("score", { ascending: false })
-          .order("updated_at", { ascending: true })
-          .limit(20);
-        if (m === "today") q = q.gte("updated_at", startOfTodayLocalISO());
-        return q;
-      },
-      () => {
-        let q = supabase
-          .from("leaderboard_best_v2")
-          .select("nickname_key,nickname_display,score,updated_at,store");
-        
-        if (store !== "__ALL__") {
-          q = q.eq("store", store);
-        }
-        
-        q = q.order("score", { ascending: false })
-          .order("updated_at", { ascending: true })
-          .limit(20);
-        if (m === "today") q = q.gte("updated_at", startOfTodayLocalISO());
-        return q;
-      },
-      () => {
-        let q = supabase
-          .from("leaderboard_best_v2")
-          .select("nickname_key,nickname_display,score,updated_at,character");
-        
-        if (store !== "__ALL__") {
-          q = q.eq("store", store);
-        }
-        
-        q = q.order("score", { ascending: false })
-          .order("updated_at", { ascending: true })
-          .limit(20);
-        if (m === "today") q = q.gte("updated_at", startOfTodayLocalISO());
-        return q;
-      },
-      () => {
-        let q = supabase
-          .from("leaderboard_best_v2")
-          .select("nickname_key,nickname_display,score,updated_at");
-        
-        if (store !== "__ALL__") {
-          q = q.eq("store", store);
-        }
-        
-        q = q.order("score", { ascending: false })
-          .order("updated_at", { ascending: true })
-          .limit(20);
-        if (m === "today") q = q.gte("updated_at", startOfTodayLocalISO());
-        return q;
-      },
-    ];
+    try {
+      let query = supabase
+        .from("leaderboard_best_v2")
+        .select("nickname_key,nickname_display,score,updated_at,character,store")
+        .order("score", { ascending: false })
+        .order("updated_at", { ascending: true })
+        .limit(20);
 
-    let data: any = null;
-    let error: any = null;
-    for (const attempt of attempts) {
-      const res = await attempt();
-      data = res.data;
-      error = res.error;
-      if (!error) break;
-    }
-
-    setLbLoading(false);
-
-    if (error) {
-      console.error(error);
-      alert("Failed to load leaderboard.");
-      return;
-    }
-
-    const list = (data as DbRow[]) ?? [];
-
-    let rank = 0;
-    let lastScoreLocal: number | null = null;
-
-    const rows: LeaderRow[] = list.map((r, idx) => {
-      if (lastScoreLocal === null || r.score !== lastScoreLocal) {
-        rank = idx + 1;
-        lastScoreLocal = r.score;
+      if (store !== "__ALL__") {
+        query = query.eq("store", store);
       }
 
-      return {
-        rank,
-        nickname: r.nickname_display,
-        score: r.score,
-        date: new Date(r.updated_at).toLocaleDateString(),
-        character: r.character,
-      };
-    });
+      if (m === "today") {
+        query = query.gte("updated_at", startOfTodayLocalISO());
+      }
 
-    setLbRows(rows);
+      let { data, error } = await query;
+
+      // Fallback attempts if first query fails
+      if (error) {
+        const fallbacks = [
+          () =>
+            supabase
+              .from("leaderboard_best_v2")
+              .select("nickname_key,nickname_display,score,updated_at,store")
+              .order("score", { ascending: false })
+              .order("updated_at", { ascending: true })
+              .limit(20)
+              .then((r) =>
+                store !== "__ALL__" ? { ...r, data: r.data } : r
+              ),
+          () =>
+            supabase
+              .from("leaderboard_best_v2")
+              .select("nickname_key,nickname_display,score,updated_at,character")
+              .order("score", { ascending: false })
+              .order("updated_at", { ascending: true })
+              .limit(20),
+          () =>
+            supabase
+              .from("leaderboard_best_v2")
+              .select("nickname_key,nickname_display,score,updated_at")
+              .order("score", { ascending: false })
+              .order("updated_at", { ascending: true })
+              .limit(20),
+        ];
+
+        for (const fallback of fallbacks) {
+          const result = await fallback();
+          if (!result.error) {
+            data = result.data;
+            error = null;
+            break;
+          }
+        }
+      }
+
+      setLbLoading(false);
+
+      if (error) {
+        console.error("Leaderboard error:", error);
+        alert("Failed to load leaderboard.");
+        return;
+      }
+
+      const list = (data as DbRow[]) ?? [];
+
+      let rank = 0;
+      let lastScoreLocal: number | null = null;
+
+      const rows: LeaderRow[] = list.map((r, idx) => {
+        if (lastScoreLocal === null || r.score !== lastScoreLocal) {
+          rank = idx + 1;
+          lastScoreLocal = r.score;
+        }
+
+        return {
+          rank,
+          nickname: r.nickname_display,
+          score: r.score,
+          date: new Date(r.updated_at).toLocaleDateString(),
+          character: r.character,
+        };
+      });
+
+      setLbRows(rows);
+    } catch (err) {
+      console.error("Leaderboard exception:", err);
+      setLbLoading(false);
+      alert("Failed to load leaderboard.");
+    }
   };
 
   const calcMyRank = async (m: LeaderMode, score: number, store: string) => {
-    const attempts = [
-      () => {
-        let q = supabase
-          .from("leaderboard_best_v2")
-          .select("nickname_key", { count: "exact", head: true })
-          .gt("score", score);
-        
-        if (store !== "__ALL__") {
-          q = q.eq("store", store);
-        }
-        
-        if (m === "today") q = q.gte("updated_at", startOfTodayLocalISO());
-        return q;
-      },
-      () => {
-        let q = supabase
-          .from("leaderboard_best_v2")
-          .select("nickname_key", { count: "exact", head: true })
-          .gt("score", score);
-        
-        if (store !== "__ALL__") {
-          q = q.eq("store", store);
-        }
-        
-        if (m === "today") q = q.gte("updated_at", startOfTodayLocalISO());
-        return q;
-      },
-    ];
+    try {
+      let query = supabase
+        .from("leaderboard_best_v2")
+        .select("nickname_key", { count: "exact", head: true })
+        .gt("score", score);
 
-    let count: number | null = null;
-    let error: any = null;
-    for (const attempt of attempts) {
-      const res = await attempt();
-      count = res.count;
-      error = res.error;
-      if (!error) break;
-    }
-    if (error) {
-      console.error(error);
+      if (store !== "__ALL__") {
+        query = query.eq("store", store);
+      }
+
+      if (m === "today") {
+        query = query.gte("updated_at", startOfTodayLocalISO());
+      }
+
+      let { count, error } = await query;
+
+      // Fallback if first query fails
+      if (error) {
+        const fallback = await supabase
+          .from("leaderboard_best_v2")
+          .select("nickname_key", { count: "exact", head: true })
+          .gt("score", score);
+
+        count = fallback.count;
+        error = fallback.error;
+      }
+
+      if (error) {
+        console.error("Rank calculation error:", error);
+        setMyRank(undefined);
+        return;
+      }
+
+      setMyRank((count ?? 0) + 1);
+    } catch (err) {
+      console.error("Rank calculation exception:", err);
       setMyRank(undefined);
-      return;
     }
-
-    setMyRank((count ?? 0) + 1);
   };
 
   const openLeaderboard = async () => {
