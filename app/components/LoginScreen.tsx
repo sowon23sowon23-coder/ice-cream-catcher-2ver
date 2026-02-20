@@ -31,6 +31,12 @@ export default function LoginScreen({
     return base;
   }, [storeQuery, stores, selectedStore]);
 
+  const foundStore = useMemo(() => {
+    const q = storeQuery.trim().toLowerCase();
+    if (!q) return selectedStore;
+    return stores.find((store) => store.toLowerCase().includes(q));
+  }, [storeQuery, stores, selectedStore]);
+
   const submit = () => {
     const trimmed = nickname.trim();
     if (trimmed.length < 2 || trimmed.length > 12) {
@@ -87,6 +93,9 @@ export default function LoginScreen({
           {filteredStores.length === 0 ? (
             <p className="mt-1 text-xs font-bold text-[#8d5b76]">No matching stores.</p>
           ) : null}
+          <p className="mt-2 text-xs font-bold text-[#8d5b76]">
+            {foundStore ? `Store: ${foundStore}` : "Store: -"}
+          </p>
 
           <button
             type="button"
