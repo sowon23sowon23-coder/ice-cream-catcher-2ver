@@ -109,11 +109,7 @@ export default function HomeScreen({
         ) : null}
 
         <section className="mb-4 rounded-3xl border border-[#f8d2e4] bg-white/85 p-5 shadow-[0_16px_40px_rgba(150,9,83,0.16)] backdrop-blur-sm">
-          <h2 className="mt-1 text-3xl font-black leading-[1.08] text-[#4b0b31]">Catch. Score. Celebrate.</h2>
-          <p className="mt-2 text-sm font-semibold text-[#72425f]">
-            Inspired by Yogurtland&apos;s bright store look and promo energy.
-          </p>
-          <div className="mt-4 flex items-center justify-between rounded-2xl bg-[#fff3f9] px-4 py-3 ring-1 ring-[#f5c7de]">
+          <div className="flex items-center justify-between rounded-2xl bg-[#fff3f9] px-4 py-3 ring-1 ring-[#f5c7de]">
             <div>
               <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#960953]">Best Score</p>
               <p className="text-2xl font-black text-[#4b0b31]">{bestScore}</p>
