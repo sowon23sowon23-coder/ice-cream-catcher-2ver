@@ -392,8 +392,8 @@ export default function Page() {
 
   return (
     <>
-      <main className="min-h-screen overflow-auto bg-[radial-gradient(circle_at_15%_5%,#ffffff_0%,#ffeef8_35%,#f8d5e8_100%)] p-4">
-        <div className="mx-auto flex w-full max-w-[390px] items-center justify-center">
+      <main className="fixed inset-0 overflow-auto bg-[radial-gradient(circle_at_15%_5%,#ffffff_0%,#ffeef8_35%,#f8d5e8_100%)] flex items-center justify-center p-4">
+        <div className="flex w-full max-w-[390px] items-center justify-center">
           <div
             className="relative overflow-hidden rounded-[2rem] bg-white/95 shadow-[0_22px_60px_rgba(150,9,83,0.28)] ring-1 ring-[#f4c2db]"
             style={{
