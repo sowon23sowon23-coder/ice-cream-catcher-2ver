@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export default function LoginScreen({
   initialNickname = "",
@@ -16,7 +16,20 @@ export default function LoginScreen({
   onLogin: (nickname: string) => void;
 }) {
   const [nickname, setNickname] = useState(initialNickname);
+  const [storeQuery, setStoreQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const filteredStores = useMemo(() => {
+    const q = storeQuery.trim().toLowerCase();
+    const base = q
+      ? stores.filter((store) => store.toLowerCase().includes(q))
+      : stores;
+
+    if (selectedStore && !base.includes(selectedStore)) {
+      return [selectedStore, ...base];
+    }
+    return base;
+  }, [storeQuery, stores, selectedStore]);
 
   const submit = () => {
     const trimmed = nickname.trim();
@@ -52,18 +65,28 @@ export default function LoginScreen({
           <label htmlFor="login-store" className="mt-4 block text-xs font-black uppercase tracking-[0.14em] text-[#960953]">
             Store
           </label>
+          <input
+            id="login-store-search"
+            value={storeQuery}
+            onChange={(e) => setStoreQuery(e.target.value)}
+            placeholder="Search store"
+            className="mt-1 w-full rounded-xl border border-[#f3bdd8] bg-[#fff9fc] px-3 py-2 text-sm font-semibold text-[#4b0f31] outline-none focus:border-[#960953]"
+          />
           <select
             id="login-store"
             value={selectedStore}
             onChange={(e) => onStoreChange(e.target.value)}
             className="mt-1 w-full rounded-xl border border-[#f3bdd8] bg-[#fff9fc] px-3 py-2 text-sm font-semibold text-[#4b0f31] outline-none focus:border-[#960953]"
           >
-            {stores.map((store) => (
+            {filteredStores.map((store) => (
               <option key={store} value={store}>
                 {store}
               </option>
             ))}
           </select>
+          {filteredStores.length === 0 ? (
+            <p className="mt-1 text-xs font-bold text-[#8d5b76]">No matching stores.</p>
+          ) : null}
 
           <button
             type="button"
