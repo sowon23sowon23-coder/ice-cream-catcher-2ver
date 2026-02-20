@@ -227,10 +227,14 @@ export default function Page() {
 
   useEffect(() => {
     const savedNick = (localStorage.getItem("nickname") || "").trim();
+    const savedStore = (localStorage.getItem("selectedStore") || "").trim();
     if (savedNick.length >= 2 && savedNick.length <= 12) {
       setAuthNick(savedNick);
     } else {
       setAuthNick(undefined);
+    }
+    if (savedStore && STORE_OPTIONS.includes(savedStore)) {
+      setSelectedStore(savedStore);
     }
     setPhase("login");
   }, []);
@@ -242,7 +246,9 @@ export default function Page() {
   }, [phase]);
 
   useEffect(() => {
-    localStorage.setItem("selectedStore", selectedStore);
+    if (selectedStore.trim()) {
+      localStorage.setItem("selectedStore", selectedStore);
+    }
   }, [selectedStore]);
 
   const fetchTop20 = async (m: LeaderMode, store: string) => {
