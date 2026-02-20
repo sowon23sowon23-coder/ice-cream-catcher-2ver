@@ -46,8 +46,6 @@ async function fetchMyBestScore(nicknameDisplay: string, selectedStore: string) 
 
     if (selectedStore !== "__ALL__") {
       query = query.eq("store", selectedStore);
-    } else {
-      query = query.neq("store", "__ALL__");
     }
 
     const initial = await query;
@@ -66,8 +64,6 @@ async function fetchMyBestScore(nicknameDisplay: string, selectedStore: string) 
             .limit(1);
           if (selectedStore !== "__ALL__") {
             q = q.eq("store", selectedStore);
-          } else {
-            q = q.neq("store", "__ALL__");
           }
           return q;
         },
@@ -80,8 +76,6 @@ async function fetchMyBestScore(nicknameDisplay: string, selectedStore: string) 
             .limit(1);
           if (selectedStore !== "__ALL__") {
             q = q.eq("store", selectedStore);
-          } else {
-            q = q.neq("store", "__ALL__");
           }
           return q;
         },
@@ -94,8 +88,6 @@ async function fetchMyBestScore(nicknameDisplay: string, selectedStore: string) 
             .limit(1);
           if (selectedStore !== "__ALL__") {
             q = q.eq("store", selectedStore);
-          } else {
-            q = q.neq("store", "__ALL__");
           }
           return q;
         },
@@ -292,7 +284,7 @@ export default function Page() {
 
       if (store !== "__ALL__") {
         query = query.eq("store", store);
-      } else {
+      } else if (m === "today") {
         query = query.neq("store", "__ALL__");
       }
 
@@ -316,7 +308,7 @@ export default function Page() {
               .limit(20);
             if (store !== "__ALL__") {
               q = q.eq("store", store);
-            } else {
+            } else if (m === "today") {
               q = q.neq("store", "__ALL__");
             }
             if (m === "today") q = q.gte("updated_at", startOfTodayLocalISO());
@@ -331,7 +323,7 @@ export default function Page() {
               .limit(20);
             if (store !== "__ALL__") {
               q = q.eq("store", store);
-            } else {
+            } else if (m === "today") {
               q = q.neq("store", "__ALL__");
             }
             if (m === "today") q = q.gte("updated_at", startOfTodayLocalISO());
@@ -346,7 +338,7 @@ export default function Page() {
               .limit(20);
             if (store !== "__ALL__") {
               q = q.eq("store", store);
-            } else {
+            } else if (m === "today") {
               q = q.neq("store", "__ALL__");
             }
             if (m === "today") q = q.gte("updated_at", startOfTodayLocalISO());
@@ -409,7 +401,7 @@ export default function Page() {
 
       if (store !== "__ALL__") {
         query = query.eq("store", store);
-      } else {
+      } else if (m === "today") {
         query = query.neq("store", "__ALL__");
       }
 
@@ -428,7 +420,7 @@ export default function Page() {
 
         if (store !== "__ALL__") {
           fallbackQuery = fallbackQuery.eq("store", store);
-        } else {
+        } else if (m === "today") {
           fallbackQuery = fallbackQuery.neq("store", "__ALL__");
         }
         if (m === "today") {
