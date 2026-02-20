@@ -120,7 +120,9 @@ export default function LeaderboardModal({
         <div className="px-5 pb-5 pt-4">
           {(myNickname || myScore !== undefined) && (
             <div className="mb-3 rounded-2xl border border-[#f2c2da] bg-[#fff4fa] px-4 py-3">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-[#960953]">Your best</p>
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-[#960953]">
+                {mode === "today" ? "Today best" : "Your best"}
+              </p>
               <div className="mt-1 flex items-center justify-between">
                 <div className="truncate pr-3 font-black text-[#4b0f31]">{myNickname ?? "-"}</div>
                 <div className="text-lg font-black text-[#960953]">{myScore ?? "-"}</div>

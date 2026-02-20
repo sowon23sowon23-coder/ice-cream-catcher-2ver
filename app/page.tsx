@@ -103,6 +103,91 @@ async function fetchMyBestScore(nicknameDisplay: string, selectedStore: string) 
   }
 }
 
+async function fetchMyTodayScore(nicknameDisplay: string, selectedStore: string) {
+  const key = normalizeNick(nicknameDisplay);
+
+  try {
+    let query = supabase
+      .from("leaderboard_best_v2")
+      .select("score,nickname_display,character,store,updated_at")
+      .eq("nickname_key", key)
+      .gte("updated_at", startOfTodayLocalISO())
+      .order("score", { ascending: false })
+      .order("updated_at", { ascending: true })
+      .limit(1);
+
+    if (selectedStore !== "__ALL__") {
+      query = query.eq("store", selectedStore);
+    }
+
+    let { data, error } = await query;
+
+    if (error && !data) {
+      const fallbacks = [
+        async () => {
+          let q = supabase
+            .from("leaderboard_best_v2")
+            .select("score,nickname_display,store,updated_at")
+            .eq("nickname_key", key)
+            .gte("updated_at", startOfTodayLocalISO())
+            .order("score", { ascending: false })
+            .order("updated_at", { ascending: true })
+            .limit(1);
+          if (selectedStore !== "__ALL__") q = q.eq("store", selectedStore);
+          return q;
+        },
+        async () => {
+          let q = supabase
+            .from("leaderboard_best_v2")
+            .select("score,nickname_display,character,updated_at")
+            .eq("nickname_key", key)
+            .gte("updated_at", startOfTodayLocalISO())
+            .order("score", { ascending: false })
+            .order("updated_at", { ascending: true })
+            .limit(1);
+          if (selectedStore !== "__ALL__") q = q.eq("store", selectedStore);
+          return q;
+        },
+        async () => {
+          let q = supabase
+            .from("leaderboard_best_v2")
+            .select("score,nickname_display,updated_at")
+            .eq("nickname_key", key)
+            .gte("updated_at", startOfTodayLocalISO())
+            .order("score", { ascending: false })
+            .order("updated_at", { ascending: true })
+            .limit(1);
+          if (selectedStore !== "__ALL__") q = q.eq("store", selectedStore);
+          return q;
+        },
+      ];
+
+      for (const fallback of fallbacks) {
+        const result = await fallback();
+        if (!result.error && result.data) {
+          data = result.data;
+          error = null;
+          break;
+        }
+      }
+    }
+
+    if (error) throw error;
+    if (!data || data.length === 0) return undefined;
+
+    const row = data[0] as { score: number; nickname_display: string; character?: CharId | null; store?: string | null };
+    return {
+      score: row.score,
+      display: row.nickname_display,
+      character: row.character ?? undefined,
+      store: row.store ?? (selectedStore === "__ALL__" ? "Unknown" : selectedStore),
+    };
+  } catch (err) {
+    console.error("Fetch today score error:", err);
+    throw err;
+  }
+}
+
 function startOfTodayLocalISO() {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -296,7 +381,10 @@ export default function Page() {
 
     if (nick.length >= 2 && nick.length <= 12) {
       try {
-        const mine = await fetchMyBestScore(nick, selectedStore);
+        const mine =
+          mode === "today"
+            ? await fetchMyTodayScore(nick, selectedStore)
+            : await fetchMyBestScore(nick, selectedStore);
         if (mine) {
           setLastScore(mine.score);
           await calcMyRank(mode, mine.score, selectedStore);
@@ -324,6 +412,31 @@ export default function Page() {
     store: string
   ) => {
     const nickname_key = normalizeNick(nicknameDisplay);
+    let existingBest = 0;
+
+    try {
+      let existingQuery = supabase
+        .from("leaderboard_best_v2")
+        .select("score")
+        .eq("nickname_key", nickname_key)
+        .order("score", { ascending: false })
+        .limit(1);
+
+      if (store !== "__ALL__") {
+        existingQuery = existingQuery.eq("store", store);
+      }
+
+      const { data: existingData, error: existingError } = await existingQuery;
+      if (!existingError && existingData && existingData.length > 0) {
+        existingBest = Number(existingData[0]?.score ?? 0);
+      }
+    } catch (e) {
+      console.error("Fetch existing best error:", e);
+    }
+
+    if (score <= existingBest) {
+      return existingBest;
+    }
 
     const attempts = [
       () =>
@@ -368,16 +481,35 @@ export default function Page() {
     if (error) {
       console.error(error);
       alert("Failed to save score.");
+      return undefined;
     }
+
+    return score;
   };
 
   const onChangeMode = async (m: LeaderMode) => {
     setMode(m);
     await fetchTop20(m, selectedStore);
 
-    if (lastScore !== undefined) {
-      await calcMyRank(m, lastScore, selectedStore);
+    const nick = (localStorage.getItem("nickname") || "").trim();
+    if (nick.length >= 2 && nick.length <= 12) {
+      try {
+        const mine =
+          m === "today" ? await fetchMyTodayScore(nick, selectedStore) : await fetchMyBestScore(nick, selectedStore);
+        if (mine) {
+          setLastScore(mine.score);
+          await calcMyRank(m, mine.score, selectedStore);
+        } else {
+          setLastScore(undefined);
+          setMyRank(undefined);
+        }
+      } catch (e) {
+        console.error(e);
+        setLastScore(undefined);
+        setMyRank(undefined);
+      }
     } else {
+      setLastScore(undefined);
       setMyRank(undefined);
     }
   };
@@ -392,7 +524,8 @@ export default function Page() {
 
     if (nick.length >= 2 && nick.length <= 12) {
       try {
-        const mine = await fetchMyBestScore(nick, store);
+        const mine =
+          mode === "today" ? await fetchMyTodayScore(nick, store) : await fetchMyBestScore(nick, store);
         if (mine) {
           setLastScore(mine.score);
           await calcMyRank(mode, mine.score, store);
@@ -450,12 +583,24 @@ export default function Page() {
                   const nick = (localStorage.getItem("nickname") || "").trim();
 
                   setLastNick(nick || undefined);
-                  setLastScore(finalScore);
 
                   if (nick.length >= 2 && nick.length <= 12) {
                     await upsertBestScore(nick, finalScore, character, selectedStore);
-                    await calcMyRank(mode, finalScore, selectedStore);
+
+                    const mine =
+                      mode === "today"
+                        ? await fetchMyTodayScore(nick, selectedStore)
+                        : await fetchMyBestScore(nick, selectedStore);
+
+                    if (mine) {
+                      setLastScore(mine.score);
+                      await calcMyRank(mode, mine.score, selectedStore);
+                    } else {
+                      setLastScore(undefined);
+                      setMyRank(undefined);
+                    }
                   } else {
+                    setLastScore(undefined);
                     setMyRank(undefined);
                   }
 
@@ -485,4 +630,3 @@ export default function Page() {
     </>
   );
 }
-
