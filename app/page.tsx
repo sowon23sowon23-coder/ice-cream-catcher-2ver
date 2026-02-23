@@ -244,8 +244,6 @@ export default function Page() {
   const [lastScore, setLastScore] = useState<number | undefined>(undefined);
   const [lastNick, setLastNick] = useState<string | undefined>(undefined);
   const [myRank, setMyRank] = useState<number | undefined>(undefined);
-  const [lastGameScore, setLastGameScore] = useState<number | undefined>(undefined);
-  const [playedStore, setPlayedStore] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const savedNick = (localStorage.getItem("nickname") || "").trim();
@@ -692,8 +690,6 @@ export default function Page() {
                   setMode(leaderboardMode);
                   setSelectedStore(normalizedStore);
                   setLastNick(nick || undefined);
-                  setLastGameScore(finalScore);
-                  setPlayedStore(normalizedStore || undefined);
 
                   if (nick.length >= 2 && nick.length <= 12) {
                     await upsertBestScore(nick, finalScore, character, normalizedStore);
@@ -731,8 +727,6 @@ export default function Page() {
         myNickname={lastNick}
         myScore={lastScore}
         myRank={myRank}
-        lastGameScore={lastGameScore}
-        playedStore={playedStore}
         mode={mode}
         onModeChange={onChangeMode}
       />

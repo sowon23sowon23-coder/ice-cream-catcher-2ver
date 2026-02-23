@@ -33,8 +33,6 @@ export default function LeaderboardModal({
   myNickname,
   myScore,
   myRank,
-  lastGameScore,
-  playedStore,
   mode,
   onModeChange,
 }: {
@@ -48,8 +46,6 @@ export default function LeaderboardModal({
   myNickname?: string;
   myScore?: number;
   myRank?: number;
-  lastGameScore?: number;
-  playedStore?: string;
   mode: LeaderMode;
   onModeChange: (m: LeaderMode) => void;
 }) {
@@ -147,12 +143,6 @@ export default function LeaderboardModal({
                   {!inTop20 && <span className="text-[#a57a92]">(outside Top 20)</span>}
                 </p>
               )}
-              {(playedStore || lastGameScore !== undefined) && (
-                <p className="mt-2 text-xs font-bold text-[#6f3254]">
-                  {playedStore ? `Store: ${playedStore}` : "Store: -"}
-                  {lastGameScore !== undefined ? ` · Last game: ${lastGameScore}` : ""}
-                </p>
-              )}
             </div>
           )}
 
@@ -205,6 +195,17 @@ export default function LeaderboardModal({
               </div>
             )}
           </div>
+
+          {mode === "today" && myRank !== undefined && myScore !== undefined && myNickname && (
+            <div className="mt-3 rounded-2xl border border-[#f2c2da] bg-[#fff4fa] px-4 py-3">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-[#960953]">Your Today Rank</p>
+              <div className="mt-2 grid grid-cols-[70px_1fr_84px] items-center text-sm">
+                <div className="font-black text-[#6b1f49]">#{myRank}</div>
+                <div className="truncate font-bold text-[#4e1434]">{myNickname}</div>
+                <div className="text-right font-black text-[#7d1148]">{myScore}</div>
+              </div>
+            </div>
+          )}
 
           <button
             onClick={onClose}
