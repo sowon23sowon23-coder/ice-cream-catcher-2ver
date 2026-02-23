@@ -708,9 +708,9 @@ export default function Game({
       <div className="w-full max-w-md">
         <div className="mb-3 flex gap-2">
           {/* Score */}
-          <div className={`flex flex-col items-center rounded-2xl bg-white/85 py-2 shadow ring-1 ring-[#f4c2db] ${mode === "timeAttack" ? "flex-[2]" : "flex-1"}`}>
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#960953]">SCORE</span>
-            <span className={`font-black leading-tight text-[#4b0b31] ${mode === "timeAttack" ? "text-3xl" : "text-2xl"}`}>{score}</span>
+          <div className={`flex flex-col items-center rounded-2xl py-2 shadow ${mode === "timeAttack" ? "flex-[2] bg-[#960953]" : "flex-1 bg-white/85 ring-1 ring-[#f4c2db]"}`}>
+            <span className={`text-[9px] font-black uppercase tracking-widest ${mode === "timeAttack" ? "text-white/60" : "text-[#960953]"}`}>SCORE</span>
+            <span className={`font-black leading-tight ${mode === "timeAttack" ? "text-3xl text-white" : "text-2xl text-[#4b0b31]"}`}>{score}</span>
           </div>
           {/* Lives — free & mission only */}
           {mode !== "timeAttack" && (
