@@ -39,8 +39,12 @@ const GAME_BG_CANDIDATES = [
 
 const DEFAULT_GAME_BG =
   "radial-gradient(circle at 18% 18%, rgba(255,255,255,0.48), transparent 36%), linear-gradient(180deg, #99dcff 0%, #70c9ff 48%, #4ca6e8 100%)";
-const FREE_DIFFICULTY_STEP = 20;
-const FREE_SPEED_PER_LEVEL = 0.15;
+const FREE_DIFFICULTY_STEP = 10;
+const FREE_SPEED_PER_LEVEL = 0.12;
+const FREE_BASE_FALL_SPEED_MIN = 0.75;
+const FREE_BASE_FALL_SPEED_RANGE = 1.35;
+const DEFAULT_BASE_FALL_SPEED_MIN = 1.2;
+const DEFAULT_BASE_FALL_SPEED_RANGE = 2.4;
 const TIME_ATTACK_CREAM_ZONES: CreamZone[] = [
   { minX: 44, maxX: 56, minY: 10, maxY: 20 },
   { minX: 33, maxX: 66, minY: 20, maxY: 30 },
@@ -142,8 +146,6 @@ export default function Game({
   const [timeLeft, setTimeLeft] = useState(5);
   const [difficultyLevel, setDifficultyLevel] = useState(0);
   const [difficultyNotice, setDifficultyNotice] = useState<string | null>(null);
-  const [fanfareNotice, setFanfareNotice] = useState(false);
-  const [fireworkSeed, setFireworkSeed] = useState(0);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [playerX, setPlayerX] = useState(50);
   const [missionTargets, setMissionTargets] = useState<MissionItemImage[]>([]);
@@ -167,37 +169,14 @@ export default function Game({
   const spawnRef = useRef<number | null>(null);
   const loopRef = useRef<number | null>(null);
   const noticeTimeoutRef = useRef<number | null>(null);
-  const fanfareTimeoutRef = useRef<number | null>(null);
   const playerXRef = useRef(50);
   const gameOverFiredRef = useRef(false);
   const difficultyLevelRef = useRef(0);
-  const nextFanfareScoreRef = useRef(20);
-  const pausedRef = useRef(false);
   const collectedRef = useRef<CaughtItem[]>([]);
   const leaderboardOpenedRef = useRef(false);
 
   const missionSet = useMemo(() => new Set(missionTargets), [missionTargets]);
-  const isPaused = phase === "play" && fanfareNotice;
-  const fireworkPieces = useMemo(() => {
-    return Array.from({ length: 26 }, (_, i) => {
-      const angle = (Math.PI * 2 * i) / 26 + Math.random() * 0.2;
-      const distance = 72 + Math.random() * 110;
-      const tx = Math.cos(angle) * distance;
-      const ty = Math.sin(angle) * distance;
-      const hue = Math.floor(Math.random() * 360);
-      const delay = Math.random() * 0.25;
-      const size = 6 + Math.random() * 8;
-
-      return {
-        id: i,
-        tx,
-        ty,
-        delay,
-        size,
-        color: `hsl(${hue} 100% 60%)`,
-      };
-    });
-  }, [fireworkSeed]);
+  const isPaused = false;
 
   useEffect(() => {
     playerXRef.current = playerX;
@@ -207,17 +186,10 @@ export default function Game({
     difficultyLevelRef.current = difficultyLevel;
   }, [difficultyLevel]);
 
-  useEffect(() => {
-    pausedRef.current = isPaused;
-  }, [isPaused]);
-
   useEffect(
     () => () => {
       if (noticeTimeoutRef.current !== null) {
         clearTimeout(noticeTimeoutRef.current);
-      }
-      if (fanfareTimeoutRef.current !== null) {
-        clearTimeout(fanfareTimeoutRef.current);
       }
     },
     []
@@ -323,7 +295,6 @@ export default function Game({
     setTimeLeft(5);
     setDifficultyLevel(0);
     setDifficultyNotice(null);
-    setFanfareNotice(false);
     setShareNotice(null);
     setPlayerX(50);
     setItems([]);
@@ -336,11 +307,6 @@ export default function Game({
       clearTimeout(noticeTimeoutRef.current);
       noticeTimeoutRef.current = null;
     }
-    if (fanfareTimeoutRef.current !== null) {
-      clearTimeout(fanfareTimeoutRef.current);
-      fanfareTimeoutRef.current = null;
-    }
-    nextFanfareScoreRef.current = 20;
 
     trackEvent({ action: "game_start", category: "game", label: mode, value: 0 });
 
@@ -391,25 +357,6 @@ export default function Game({
       setDifficultyNotice(null);
       noticeTimeoutRef.current = null;
     }, 1400);
-  }, [mode, phase, score]);
-
-  useEffect(() => {
-    if (mode !== "free" || phase !== "play") return;
-    if (score < nextFanfareScoreRef.current) return;
-
-    while (score >= nextFanfareScoreRef.current) {
-      nextFanfareScoreRef.current += 20;
-    }
-    trackEvent({ action: "fanfare_reached", category: "game", label: `score_${score}`, value: score });
-    setFireworkSeed((n) => n + 1);
-    setFanfareNotice(true);
-    if (fanfareTimeoutRef.current !== null) {
-      clearTimeout(fanfareTimeoutRef.current);
-    }
-    fanfareTimeoutRef.current = window.setTimeout(() => {
-      setFanfareNotice(false);
-      fanfareTimeoutRef.current = null;
-    }, 1800);
   }, [mode, phase, score]);
 
   const PLAYER_W = 80;
@@ -577,19 +524,21 @@ export default function Game({
     if (loopRef.current !== null) return;
 
     spawnRef.current = window.setInterval(() => {
-      if (pausedRef.current) return;
       let itemData: { emoji?: string; image?: string };
       const randomImage = fallingItemImages[Math.floor(Math.random() * fallingItemImages.length)] ?? "gummy-bear.png";
       itemData = { image: randomImage };
+      const baseFallSpeed =
+        mode === "free"
+          ? FREE_BASE_FALL_SPEED_MIN + Math.random() * FREE_BASE_FALL_SPEED_RANGE
+          : DEFAULT_BASE_FALL_SPEED_MIN + Math.random() * DEFAULT_BASE_FALL_SPEED_RANGE;
 
       setItems((v) => [
         ...v,
-        { id: idRef.current++, x: Math.random() * 90 + 5, y: -5, v: 1.2 + Math.random() * 2.4, ...itemData },
+        { id: idRef.current++, x: Math.random() * 90 + 5, y: -5, v: baseFallSpeed, ...itemData },
       ]);
     }, 900);
 
     loopRef.current = window.setInterval(() => {
-      if (pausedRef.current) return;
       const now = performance.now();
       const px = playerXRef.current;
 
@@ -738,22 +687,6 @@ export default function Game({
           animation-timing-function: linear;
           animation-iteration-count: infinite;
         }
-        @keyframes fireworkBurst {
-          0% {
-            transform: translate3d(0, 0, 0) scale(0.25);
-            opacity: 0;
-          }
-          15% {
-            opacity: 1;
-          }
-          100% {
-            transform: translate3d(var(--tx), var(--ty), 0) scale(1);
-            opacity: 0;
-          }
-        }
-        .firework-piece {
-          animation: fireworkBurst 900ms ease-out forwards;
-        }
         @keyframes toppingReveal {
           0%   { opacity: 0; transform: rotate(var(--rot)) scale(0.3) translateY(-22px); }
           65%  { opacity: 1; transform: rotate(var(--rot)) scale(1.12) translateY(3px); }
@@ -841,34 +774,6 @@ export default function Game({
           {mode === "free" && phase === "play" && difficultyNotice && (
             <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 rounded-full bg-fuchsia-600/90 text-white text-xs font-extrabold px-4 py-2 shadow-lg">
               {difficultyNotice}
-            </div>
-          )}
-
-          {mode === "free" && phase === "play" && fanfareNotice && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
-              <div className="absolute inset-0 bg-white/15 backdrop-blur-[1px]" />
-              {fireworkPieces.map((piece) => (
-                <span
-                  key={`${fireworkSeed}-${piece.id}`}
-                  className="firework-piece absolute left-1/2 top-1/2 rounded-full"
-                  style={
-                    {
-                      width: `${piece.size}px`,
-                      height: `${piece.size}px`,
-                      backgroundColor: piece.color,
-                      boxShadow: `0 0 10px ${piece.color}`,
-                      animationDelay: `${piece.delay}s`,
-                      "--tx": `${piece.tx}px`,
-                      "--ty": `${piece.ty}px`,
-                    } as CSSProperties
-                  }
-                />
-              ))}
-              <div className="rounded-3xl bg-amber-300/95 text-amber-950 px-8 py-5 shadow-2xl text-center border-2 border-white/60">
-                <div className="text-2xl font-black tracking-wide">Fanfare!</div>
-                <div className="mt-1 text-sm font-extrabold">Free Play 10 Points!</div>
-                <div className="mt-1 text-xs font-bold">Paused</div>
-              </div>
             </div>
           )}
 
