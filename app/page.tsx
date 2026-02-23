@@ -680,25 +680,25 @@ export default function Page() {
                 }}
                 onGameOver={async (finalScore: number) => {
                   const nick = (localStorage.getItem("nickname") || "").trim();
-                  const scoreStore =
-                    selectedStore === "__ALL__"
-                      ? (localStorage.getItem("selectedStore") || STORE_OPTIONS[0] || "")
-                      : selectedStore;
+                  const fallbackStore = (localStorage.getItem("selectedStore") || STORE_OPTIONS[0] || "").trim();
+                  const normalizedStore =
+                    selectedStore && selectedStore !== "__ALL__" ? selectedStore : fallbackStore;
                   const leaderboardMode: LeaderMode = "today";
 
                   setLbOpen(true);
                   setLbLoading(true);
                   setMode(leaderboardMode);
+                  setSelectedStore(normalizedStore);
                   setLastNick(nick || undefined);
 
                   if (nick.length >= 2 && nick.length <= 12) {
-                    await upsertBestScore(nick, finalScore, character, scoreStore);
+                    await upsertBestScore(nick, finalScore, character, normalizedStore);
 
-                    const mine = await fetchMyTodayScore(nick, selectedStore);
+                    const mine = await fetchMyTodayScore(nick, normalizedStore);
 
                     if (mine) {
                       setLastScore(mine.score);
-                      await calcMyRank(leaderboardMode, mine.score, selectedStore);
+                      await calcMyRank(leaderboardMode, mine.score, normalizedStore);
                     } else {
                       setLastScore(undefined);
                       setMyRank(undefined);
@@ -708,7 +708,7 @@ export default function Page() {
                     setMyRank(undefined);
                   }
 
-                  await fetchTop20(leaderboardMode, selectedStore);
+                  await fetchTop20(leaderboardMode, normalizedStore);
                 }}
               />
             )}
