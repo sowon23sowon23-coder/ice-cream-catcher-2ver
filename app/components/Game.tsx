@@ -70,6 +70,7 @@ export default function Game({
   const [bounce, setBounce] = useState(false);
   const [shake, setShake] = useState(false);
   const [gameBg, setGameBg] = useState<string | null>(null);
+  const [finalCupLoadFailed, setFinalCupLoadFailed] = useState(false);
 
   const [collectedToppings, setCollectedToppings] = useState<CaughtItem[]>([]);
 
@@ -204,6 +205,7 @@ export default function Game({
     collectedRef.current = [];
     leaderboardOpenedRef.current = false;
     setCollectedToppings([]);
+    setFinalCupLoadFailed(false);
 
     setScore(0);
     setLives(3);
@@ -854,15 +856,20 @@ export default function Game({
 
             {/* Cup + toppings */}
             <div className="relative h-64 w-56">
-              <img
-                src="/final-cup.png"
-                alt="Your ice cream cup"
-                className="h-full w-full select-none object-contain drop-shadow-xl"
-                draggable={false}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
-              />
+              {!finalCupLoadFailed ? (
+                <img
+                  src="/final-cup.png?v=20260223"
+                  alt="Your ice cream cup"
+                  className="h-full w-full select-none object-contain drop-shadow-xl"
+                  draggable={false}
+                  onLoad={() => setFinalCupLoadFailed(false)}
+                  onError={() => setFinalCupLoadFailed(true)}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center rounded-[2rem] bg-white/45 ring-1 ring-[#f4c2db]">
+                  <span className="text-7xl">🍨</span>
+                </div>
+              )}
               {collectedToppings.slice(0, 22).map((t, i) => (
                 <div
                   key={t.id}
