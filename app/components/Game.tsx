@@ -882,7 +882,7 @@ export default function Game({
               "radial-gradient(circle at 50% 0%, #fff8fc 0%, #fce4f0 50%, #f3c0db 100%)",
           }}
         >
-          <div className="reveal-fade-in flex h-[100dvh] max-h-[100dvh] w-full max-w-sm flex-col items-center justify-between gap-3 px-3 py-2 text-center sm:h-auto sm:max-h-none sm:max-w-xs sm:gap-5 sm:px-4 sm:py-0">
+          <div className="reveal-fade-in flex h-[100dvh] max-h-[100dvh] w-full max-w-md flex-col items-center justify-between gap-2 px-3 py-2 text-center sm:gap-3 sm:px-4 sm:py-3">
             {/* Header */}
             <div>
               <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#960953]">
@@ -901,13 +901,13 @@ export default function Game({
             </div>
 
             {/* Score badge */}
-            <div className="rounded-2xl bg-white/85 px-8 py-2 shadow ring-1 ring-[#f4c2db] sm:px-10 sm:py-3">
+            <div className="rounded-2xl bg-white/85 px-8 py-2 shadow ring-1 ring-[#f4c2db] sm:px-9 sm:py-2.5">
               <p className="text-[10px] font-black uppercase tracking-widest text-[#960953]">Score</p>
-              <p className="text-4xl font-black text-[#4b0b31] sm:text-5xl">{score}</p>
+              <p className="text-4xl font-black text-[#4b0b31] sm:text-[2.6rem]">{score}</p>
             </div>
 
             {/* Cup + toppings */}
-            <div className="relative h-72 w-64 max-w-full sm:h-[32rem] sm:w-[28rem]">
+            <div className="relative h-72 w-64 max-w-full sm:h-80 sm:w-72 lg:h-96 lg:w-80">
               {!finalCupLoadFailed ? (
                 <img
                   src="/final-cup.png?v=20260223"
@@ -959,7 +959,7 @@ export default function Game({
             </div>
 
             {/* Buttons */}
-            <div className="flex w-full flex-col gap-2.5 sm:gap-3">
+            <div className="flex w-full max-w-sm flex-col gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => {
