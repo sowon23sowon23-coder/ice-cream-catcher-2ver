@@ -26,6 +26,7 @@ type MissionItemImage = string;
 type FallingItem = { id: number; x: number; y: number; v: number; emoji?: string; image?: string };
 type Pop = { id: number; x: number; y: number; text: string; born: number };
 type CaughtItem = { id: number; emoji?: string; image?: string; x: number; y: number; rotate: number; scale: number };
+type CreamZone = { minX: number; maxX: number; minY: number; maxY: number };
 
 const GAME_BG_CANDIDATES = [
   "/game-bg-1.jpg",
@@ -40,6 +41,22 @@ const DEFAULT_GAME_BG =
   "radial-gradient(circle at 18% 18%, rgba(255,255,255,0.48), transparent 36%), linear-gradient(180deg, #99dcff 0%, #70c9ff 48%, #4ca6e8 100%)";
 const FREE_DIFFICULTY_STEP = 20;
 const FREE_SPEED_PER_LEVEL = 0.15;
+const TIME_ATTACK_CREAM_ZONES: CreamZone[] = [
+  { minX: 44, maxX: 56, minY: 10, maxY: 20 },
+  { minX: 33, maxX: 66, minY: 20, maxY: 30 },
+  { minX: 27, maxX: 70, minY: 30, maxY: 40 },
+  { minX: 23, maxX: 74, minY: 40, maxY: 49 },
+];
+
+function randomCreamToppingPlacement() {
+  const zone = TIME_ATTACK_CREAM_ZONES[Math.floor(Math.random() * TIME_ATTACK_CREAM_ZONES.length)];
+  return {
+    x: zone.minX + Math.random() * (zone.maxX - zone.minX),
+    y: zone.minY + Math.random() * (zone.maxY - zone.minY),
+    rotate: Math.random() * 36 - 18,
+    scale: 0.82 + Math.random() * 0.35,
+  };
+}
 
 function randomMissionTargetsFrom(images: readonly string[]) {
   if (images.length === 0) return [];
@@ -510,14 +527,15 @@ export default function Game({
               });
               // Track caught items for Time Attack reveal screen
               if (mode === "timeAttack") {
+                const placement = randomCreamToppingPlacement();
                 collectedRef.current.push({
                   id: item.id,
                   emoji: item.emoji,
                   image: item.image,
-                  x: 15 + Math.random() * 70,
-                  y: 8 + Math.random() * 50,
-                  rotate: Math.random() * 40 - 20,
-                  scale: 0.8 + Math.random() * 0.45,
+                  x: placement.x,
+                  y: placement.y,
+                  rotate: placement.rotate,
+                  scale: placement.scale,
                 });
               }
             }
