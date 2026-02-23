@@ -706,13 +706,35 @@ export default function Game({
       `}</style>
 
       <div className="w-full max-w-md">
-        <div className="text-center mb-3 font-bold text-pink-600">
-          {mode === "timeAttack"
-            ? `Score ${score} | Time ${timeLeft}s`
-            : mode === "free"
-              ? `Score ${score} | Lives ${lives} | Lv ${difficultyLevel}`
+        {mode === "free" ? (
+          <div className="mb-3 flex gap-2">
+            {/* Score */}
+            <div className="flex flex-1 flex-col items-center rounded-2xl bg-white/85 py-2 shadow ring-1 ring-[#f4c2db]">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#960953]">SCORE</span>
+              <span className="text-2xl font-black leading-tight text-[#4b0b31]">{score}</span>
+            </div>
+            {/* Lives */}
+            <div className="flex flex-1 flex-col items-center rounded-2xl bg-white/85 py-2 shadow ring-1 ring-[#f4c2db]">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#960953]">LIVES</span>
+              <div className="mt-0.5 flex gap-0.5">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <span key={i} className="text-lg leading-none">{i < lives ? "❤️" : "🤍"}</span>
+                ))}
+              </div>
+            </div>
+            {/* Level */}
+            <div className="flex flex-1 flex-col items-center rounded-2xl bg-[#960953] py-2 shadow">
+              <span className="text-[9px] font-black uppercase tracking-widest text-white/60">LEVEL</span>
+              <span className="text-2xl font-black leading-tight text-white">{difficultyLevel}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center mb-3 font-bold text-pink-600">
+            {mode === "timeAttack"
+              ? `Score ${score} | Time ${timeLeft}s`
               : `Score ${score} | Lives ${lives}`}
-        </div>
+          </div>
+        )}
 
         {mode === "mission" && missionTargets.length > 0 && (
           <div className="mb-3 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-2 text-center text-sm font-bold text-amber-900">
