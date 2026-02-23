@@ -54,7 +54,7 @@ export default function Game({
 
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(5);
   const [difficultyLevel, setDifficultyLevel] = useState(0);
   const [difficultyNotice, setDifficultyNotice] = useState<string | null>(null);
   const [fanfareNotice, setFanfareNotice] = useState(false);
@@ -207,7 +207,7 @@ export default function Game({
 
     setScore(0);
     setLives(3);
-    setTimeLeft(30);
+    setTimeLeft(5);
     setDifficultyLevel(0);
     setDifficultyNotice(null);
     setFanfareNotice(false);
