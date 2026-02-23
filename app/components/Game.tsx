@@ -58,6 +58,12 @@ function randomCreamToppingPlacement() {
   };
 }
 
+function imageScaleBoost(image?: string) {
+  if (image === "strawberry.png") return 1.18;
+  if (image === "mango.png") return 1.16;
+  return 1;
+}
+
 function randomMissionTargetsFrom(images: readonly string[]) {
   if (images.length === 0) return [];
   const maxCount = Math.min(5, images.length);
@@ -676,7 +682,14 @@ export default function Game({
             <p>Catch only:</p>
             <div className="mt-2 flex items-center justify-center gap-2">
               {missionTargets.map((target) => (
-                <img key={target} src={`/${target}`} alt={target} className="h-7 w-7 object-contain" draggable={false} />
+                <img
+                  key={target}
+                  src={`/${target}`}
+                  alt={target}
+                  className="h-7 w-7 object-contain"
+                  draggable={false}
+                  style={{ transform: `scale(${imageScaleBoost(target)})` }}
+                />
               ))}
             </div>
           </div>
@@ -771,6 +784,7 @@ export default function Game({
                           alt={target}
                           className="h-9 w-9 object-contain"
                           draggable={false}
+                          style={{ transform: `scale(${imageScaleBoost(target)})` }}
                         />
                       ))}
                     </div>
@@ -845,7 +859,13 @@ export default function Game({
               className="absolute text-4xl flex items-center justify-center w-8 h-8"
             >
               {item.image ? (
-                <img src={`/${item.image}`} alt="falling item" draggable={false} className="w-8 h-8" />
+                <img
+                  src={`/${item.image}`}
+                  alt="falling item"
+                  draggable={false}
+                  className="w-8 h-8"
+                  style={{ transform: `scale(${imageScaleBoost(item.image)})` }}
+                />
               ) : (
                 item.emoji
               )}
@@ -961,7 +981,7 @@ export default function Game({
                         alt=""
                         className="h-7 w-7"
                         draggable={false}
-                        style={{ transform: `scale(${t.scale})` }}
+                        style={{ transform: `scale(${t.scale * imageScaleBoost(t.image)})` }}
                       />
                     ) : (
                       <span
