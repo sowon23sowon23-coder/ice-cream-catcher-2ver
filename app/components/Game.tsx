@@ -732,9 +732,19 @@ export default function Game({
           )}
           {/* Time — time attack only */}
           {mode === "timeAttack" && (
-            <div className="flex flex-1 flex-col items-center rounded-2xl bg-[#960953] py-2 shadow">
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/60">TIME</span>
-              <span className="text-2xl font-black leading-tight text-white">{timeLeft}s</span>
+            <div
+              className={`flex flex-[2] flex-col items-center rounded-2xl py-2 shadow transition-colors duration-300 ${
+                timeLeft <= 2
+                  ? "bg-red-500 ring-2 ring-red-300"
+                  : timeLeft <= 4
+                    ? "bg-orange-400"
+                    : "bg-[#960953]"
+              }`}
+            >
+              <span className="text-[9px] font-black uppercase tracking-widest text-white/60">⏱ TIME</span>
+              <span className={`font-black leading-tight text-white ${timeLeft <= 2 ? "text-4xl" : "text-3xl"}`}>
+                {timeLeft}s
+              </span>
             </div>
           )}
         </div>
