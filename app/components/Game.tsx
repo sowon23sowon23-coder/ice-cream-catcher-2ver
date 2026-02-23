@@ -12,6 +12,7 @@ type FallingEmoji = "🍨" | MissionTopping;
 
 type FallingItem = { id: number; x: number; y: number; v: number; emoji?: FallingEmoji; image?: string };
 type Pop = { id: number; x: number; y: number; text: string; born: number };
+type CaughtItem = { id: number; emoji?: string; image?: string; x: number; y: number; rotate: number; scale: number };
 
 const GAME_BG_CANDIDATES = [
   "/game-bg-1.jpg",
@@ -70,6 +71,8 @@ export default function Game({
   const [shake, setShake] = useState(false);
   const [gameBg, setGameBg] = useState<string | null>(null);
 
+  const [collectedToppings, setCollectedToppings] = useState<CaughtItem[]>([]);
+
   const areaRef = useRef<HTMLDivElement>(null);
   const idRef = useRef(0);
   const popIdRef = useRef(0);
@@ -83,6 +86,8 @@ export default function Game({
   const difficultyLevelRef = useRef(0);
   const nextFanfareScoreRef = useRef(20);
   const pausedRef = useRef(false);
+  const collectedRef = useRef<CaughtItem[]>([]);
+  const leaderboardOpenedRef = useRef(false);
 
   const missionSet = useMemo(() => new Set(missionTargets), [missionTargets]);
   const isPaused = phase === "play" && fanfareNotice;
@@ -181,6 +186,12 @@ export default function Game({
       trackEvent({ action: "new_best_score", category: "game", label: mode, value: score });
     }
 
+    if (mode === "timeAttack") {
+      // Show Final Reveal Screen — leaderboard opens when user taps "See Leaderboard"
+      setCollectedToppings([...collectedRef.current]);
+      return;
+    }
+
     onGameOver?.(score);
   };
 
@@ -190,6 +201,9 @@ export default function Game({
     lastLifeLossRef.current = 0;
     playerXRef.current = 50;
     gameOverFiredRef.current = false;
+    collectedRef.current = [];
+    leaderboardOpenedRef.current = false;
+    setCollectedToppings([]);
 
     setScore(0);
     setLives(3);
@@ -455,6 +469,18 @@ export default function Game({
                 text: "+1",
                 born: now,
               });
+              // Track caught items for Time Attack reveal screen
+              if (mode === "timeAttack") {
+                collectedRef.current.push({
+                  id: item.id,
+                  emoji: item.emoji,
+                  image: item.image,
+                  x: 15 + Math.random() * 70,
+                  y: 8 + Math.random() * 50,
+                  rotate: Math.random() * 40 - 20,
+                  scale: 0.8 + Math.random() * 0.45,
+                });
+              }
             }
             continue;
           }
@@ -560,6 +586,22 @@ export default function Game({
         }
         .firework-piece {
           animation: fireworkBurst 900ms ease-out forwards;
+        }
+        @keyframes toppingReveal {
+          0%   { opacity: 0; transform: rotate(var(--rot)) scale(0.3) translateY(-22px); }
+          65%  { opacity: 1; transform: rotate(var(--rot)) scale(1.12) translateY(3px); }
+          100% { opacity: 1; transform: rotate(var(--rot)) scale(1) translateY(0); }
+        }
+        .topping-reveal {
+          animation: toppingReveal 0.45s ease-out forwards;
+          opacity: 0;
+        }
+        @keyframes revealFadeIn {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .reveal-fade-in {
+          animation: revealFadeIn 0.4s ease-out forwards;
         }
       `}</style>
 
@@ -670,7 +712,7 @@ export default function Game({
             </div>
           )}
 
-          {phase !== "play" && (
+          {(phase === "idle" || (phase === "over" && mode !== "timeAttack")) && (
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/55 backdrop-blur-sm">
               <div className="text-5xl mb-3">{phase === "over" ? "💥" : "🍨"}</div>
               <div className="text-xl font-extrabold text-pink-600 mb-2">
@@ -776,6 +818,133 @@ export default function Game({
           )}
         </div>
       </div>
+
+      {/* ── Time Attack Final Reveal Screen ── */}
+      {phase === "over" && mode === "timeAttack" && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-auto py-6"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 0%, #fff8fc 0%, #fce4f0 50%, #f3c0db 100%)",
+          }}
+        >
+          <div className="reveal-fade-in flex w-full max-w-xs flex-col items-center gap-5 px-4 text-center">
+            {/* Header */}
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#960953]">
+                Time Attack
+              </p>
+              <h2 className="mt-0.5 text-3xl font-black text-[#4b0b31]">Time&apos;s Up! 🍦</h2>
+              <p className="mt-1 text-sm font-bold text-[#7d3060]">
+                {score >= 25
+                  ? "Amazing! 🌟"
+                  : score >= 15
+                    ? "Great job! 🎉"
+                    : score >= 5
+                      ? "Nice catch! ✨"
+                      : "Keep going! 🍨"}
+              </p>
+            </div>
+
+            {/* Score badge */}
+            <div className="rounded-2xl bg-white/85 px-10 py-3 shadow ring-1 ring-[#f4c2db]">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#960953]">Score</p>
+              <p className="text-5xl font-black text-[#4b0b31]">{score}</p>
+            </div>
+
+            {/* Cup + toppings */}
+            <div className="relative h-64 w-56">
+              <img
+                src="/final-cup.png"
+                alt="Your ice cream cup"
+                className="h-full w-full select-none object-contain drop-shadow-xl"
+                draggable={false}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+              {collectedToppings.slice(0, 22).map((t, i) => (
+                <div
+                  key={t.id}
+                  className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: `${t.x}%`, top: `${t.y}%` }}
+                >
+                  <div
+                    className="topping-reveal"
+                    style={
+                      {
+                        "--rot": `${t.rotate}deg`,
+                        animationDelay: `${i * 55}ms`,
+                      } as CSSProperties
+                    }
+                  >
+                    {t.image ? (
+                      <img
+                        src={`/${t.image}`}
+                        alt=""
+                        className="h-7 w-7"
+                        draggable={false}
+                        style={{ transform: `scale(${t.scale})` }}
+                      />
+                    ) : (
+                      <span
+                        className="text-2xl leading-none"
+                        style={{ display: "block", transform: `scale(${t.scale})` }}
+                      >
+                        {t.emoji}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Buttons */}
+            <div className="flex w-full flex-col gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!leaderboardOpenedRef.current) {
+                    leaderboardOpenedRef.current = true;
+                    onGameOver?.(score);
+                  }
+                }}
+                className="w-full rounded-2xl bg-[#960953] py-3 text-sm font-black text-white shadow-[0_10px_24px_rgba(150,9,83,0.35)] transition active:scale-95"
+              >
+                🏆 See Leaderboard
+              </button>
+
+              <button
+                type="button"
+                onClick={start}
+                className="w-full rounded-2xl border-2 border-[#f2bfd9] bg-white py-3 text-sm font-black text-[#960953] transition active:scale-95"
+              >
+                Retry
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShare}
+                className="w-full rounded-2xl border border-[#f2bfd9] bg-white/70 py-3 text-sm font-bold text-[#6f2b50] transition active:scale-95"
+              >
+                Share
+              </button>
+
+              {shareNotice && (
+                <p className="text-xs font-bold text-[#7a4560]">{shareNotice}</p>
+              )}
+
+              <button
+                type="button"
+                onClick={onExitToHome}
+                className="text-sm font-bold text-[#a0627a] underline underline-offset-4"
+              >
+                Back to Home
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
