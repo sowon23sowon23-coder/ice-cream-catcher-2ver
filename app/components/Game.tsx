@@ -198,6 +198,9 @@ export default function Game({
   const collectedRef = useRef<CaughtItem[]>([]);
   const leaderboardOpenedRef = useRef(false);
   const lastWarningVibrateRef = useRef<number | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const catchStreakRef = useRef(0);
+  const timeUpSfxPlayedRef = useRef(false);
 
   const missionSet = useMemo(() => new Set(missionTargets), [missionTargets]);
   const isPaused = false;
@@ -331,6 +334,8 @@ export default function Game({
     setBounce(false);
     setShake(false);
     setDangerFlash(false);
+    catchStreakRef.current = 0;
+    timeUpSfxPlayedRef.current = false;
     difficultyLevelRef.current = 0;
     if (noticeTimeoutRef.current !== null) {
       clearTimeout(noticeTimeoutRef.current);
@@ -389,6 +394,53 @@ export default function Game({
   }, [mode, phase, score]);
 
   const PLAYER_W = 80;
+
+  const vibrateByEvent = (kind: "catch" | "fail" | "combo" | "timeup") => {
+    if (!("vibrate" in navigator)) return;
+    if (kind === "catch") navigator.vibrate(14);
+    if (kind === "fail") navigator.vibrate(26);
+    if (kind === "combo") navigator.vibrate([14, 22, 14]);
+    if (kind === "timeup") navigator.vibrate([40, 24, 40]);
+  };
+
+  const playSfx = (kind: "catch" | "fail" | "combo" | "timeup") => {
+    try {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") void ctx.resume();
+
+      const now = ctx.currentTime + 0.001;
+      const beep = (freq: number, dur: number, type: OscillatorType, gain: number, at: number) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, at);
+        g.gain.setValueAtTime(0.0001, at);
+        g.gain.exponentialRampToValueAtTime(gain, at + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+        osc.connect(g);
+        g.connect(ctx.destination);
+        osc.start(at);
+        osc.stop(at + dur + 0.02);
+      };
+
+      if (kind === "catch") beep(920, 0.08, "triangle", 0.04, now);
+      if (kind === "fail") beep(220, 0.14, "sawtooth", 0.05, now);
+      if (kind === "combo") {
+        beep(680, 0.08, "triangle", 0.035, now);
+        beep(860, 0.08, "triangle", 0.035, now + 0.09);
+        beep(1120, 0.1, "triangle", 0.04, now + 0.18);
+      }
+      if (kind === "timeup") {
+        beep(740, 0.12, "square", 0.04, now);
+        beep(520, 0.18, "square", 0.045, now + 0.13);
+      }
+    } catch {
+      // Ignore audio errors in restricted browsers.
+    }
+  };
 
   const createTimeAttackShareFile = async () => {
     const size = 1080;
@@ -538,6 +590,11 @@ export default function Game({
     if (phase !== "play") return;
     if (mode !== "timeAttack") return;
     if (timeLeft > 0) return;
+    if (!timeUpSfxPlayedRef.current) {
+      timeUpSfxPlayedRef.current = true;
+      playSfx("timeup");
+      vibrateByEvent("timeup");
+    }
     finishGame();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, phase, timeLeft, score]);
@@ -680,7 +737,18 @@ export default function Game({
           next.push({ ...item, y: ny });
         }
 
-        if (gained) setScore((s) => s + gained);
+        if (gained) {
+          setScore((s) => s + gained);
+          playSfx("catch");
+          vibrateByEvent("catch");
+          const prevStreak = catchStreakRef.current;
+          const nextStreak = prevStreak + gained;
+          catchStreakRef.current = nextStreak;
+          if (Math.floor(prevStreak / 5) < Math.floor(nextStreak / 5)) {
+            playSfx("combo");
+            vibrateByEvent("combo");
+          }
+        }
 
         if (lifeLoss) {
           const now2 = performance.now();
@@ -702,6 +770,9 @@ export default function Game({
             setTimeout(() => setShake(false), 180);
             setDangerFlash(true);
             setTimeout(() => setDangerFlash(false), 160);
+            catchStreakRef.current = 0;
+            playSfx("fail");
+            vibrateByEvent("fail");
             setLives((l) => Math.max(0, l - 1));
           }
         }
