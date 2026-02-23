@@ -40,9 +40,8 @@ const GAME_BG_CANDIDATES = [
 const DEFAULT_GAME_BG =
   "radial-gradient(circle at 18% 18%, rgba(255,255,255,0.48), transparent 36%), linear-gradient(180deg, #99dcff 0%, #70c9ff 48%, #4ca6e8 100%)";
 const FREE_DIFFICULTY_STEP = 10;
-const FREE_SPEED_PER_LEVEL = 0.12;
-const FREE_BASE_FALL_SPEED_MIN = 0.75;
-const FREE_BASE_FALL_SPEED_RANGE = 1.35;
+const FREE_BASE_FALL_SPEED_MIN = 0.7;
+const FREE_BASE_FALL_SPEED_RANGE = 1.15;
 const DEFAULT_BASE_FALL_SPEED_MIN = 1.2;
 const DEFAULT_BASE_FALL_SPEED_RANGE = 2.4;
 const TIME_ATTACK_CREAM_ZONES: CreamZone[] = [
@@ -114,6 +113,24 @@ function pickCreamPlacementAvoidOverlap(existing: CaughtItem[], image?: string) 
   return best;
 }
 
+function freeDifficultyLevelFromScore(score: number) {
+  return Math.floor(score / FREE_DIFFICULTY_STEP);
+}
+
+function freeSpeedMultiplier(score: number) {
+  const level = freeDifficultyLevelFromScore(score);
+  if (level <= 2) return 1 + level * 0.06; // 0..29: smooth ramp
+  if (level <= 5) return 1 + 2 * 0.06 + (level - 2) * 0.11; // 30..59: medium ramp
+  return 1 + 2 * 0.06 + 3 * 0.11 + (level - 5) * 0.16; // 60+: steeper ramp
+}
+
+function freeSpawnBurstCount(score: number) {
+  if (score < 30) return 1;
+  if (score < 60) return Math.random() < 0.35 ? 2 : 1;
+  if (score < 90) return Math.random() < 0.7 ? 2 : 1;
+  return Math.random() < 0.2 ? 3 : 2;
+}
+
 function randomMissionTargetsFrom(images: readonly string[]) {
   if (images.length === 0) return [];
   const maxCount = Math.min(5, images.length);
@@ -172,6 +189,7 @@ export default function Game({
   const playerXRef = useRef(50);
   const gameOverFiredRef = useRef(false);
   const difficultyLevelRef = useRef(0);
+  const scoreRef = useRef(0);
   const collectedRef = useRef<CaughtItem[]>([]);
   const leaderboardOpenedRef = useRef(false);
 
@@ -185,6 +203,10 @@ export default function Game({
   useEffect(() => {
     difficultyLevelRef.current = difficultyLevel;
   }, [difficultyLevel]);
+
+  useEffect(() => {
+    scoreRef.current = score;
+  }, [score]);
 
   useEffect(
     () => () => {
@@ -343,7 +365,7 @@ export default function Game({
 
   useEffect(() => {
     if (mode !== "free" || phase !== "play") return;
-    const nextLevel = Math.floor(score / FREE_DIFFICULTY_STEP);
+    const nextLevel = freeDifficultyLevelFromScore(score);
     if (nextLevel <= difficultyLevelRef.current) return;
 
     difficultyLevelRef.current = nextLevel;
@@ -527,15 +549,25 @@ export default function Game({
       let itemData: { emoji?: string; image?: string };
       const randomImage = fallingItemImages[Math.floor(Math.random() * fallingItemImages.length)] ?? "gummy-bear.png";
       itemData = { image: randomImage };
-      const baseFallSpeed =
-        mode === "free"
-          ? FREE_BASE_FALL_SPEED_MIN + Math.random() * FREE_BASE_FALL_SPEED_RANGE
-          : DEFAULT_BASE_FALL_SPEED_MIN + Math.random() * DEFAULT_BASE_FALL_SPEED_RANGE;
+      const currentScore = scoreRef.current;
+      const spawnCount = mode === "free" ? freeSpawnBurstCount(currentScore) : 1;
+      const nextItems: FallingItem[] = [];
 
-      setItems((v) => [
-        ...v,
-        { id: idRef.current++, x: Math.random() * 90 + 5, y: -5, v: baseFallSpeed, ...itemData },
-      ]);
+      for (let i = 0; i < spawnCount; i += 1) {
+        const baseFallSpeed =
+          mode === "free"
+            ? FREE_BASE_FALL_SPEED_MIN + Math.random() * FREE_BASE_FALL_SPEED_RANGE
+            : DEFAULT_BASE_FALL_SPEED_MIN + Math.random() * DEFAULT_BASE_FALL_SPEED_RANGE;
+        nextItems.push({
+          id: idRef.current++,
+          x: Math.random() * 90 + 5,
+          y: -5 - i * 3.2,
+          v: baseFallSpeed,
+          ...itemData,
+        });
+      }
+
+      setItems((v) => [...v, ...nextItems]);
     }, 900);
 
     loopRef.current = window.setInterval(() => {
@@ -550,7 +582,7 @@ export default function Game({
 
         for (const item of prev) {
           const speedMultiplier =
-            mode === "free" ? 1 + difficultyLevelRef.current * FREE_SPEED_PER_LEVEL : 1;
+            mode === "free" ? freeSpeedMultiplier(scoreRef.current) : 1;
           const ny = item.y + item.v * speedMultiplier;
           const isMissionTarget = item.image ? missionSet.has(item.image) : false;
 
