@@ -33,6 +33,8 @@ export default function LeaderboardModal({
   myNickname,
   myScore,
   myRank,
+  lastGameScore,
+  playedStore,
   mode,
   onModeChange,
 }: {
@@ -46,6 +48,8 @@ export default function LeaderboardModal({
   myNickname?: string;
   myScore?: number;
   myRank?: number;
+  lastGameScore?: number;
+  playedStore?: string;
   mode: LeaderMode;
   onModeChange: (m: LeaderMode) => void;
 }) {
@@ -141,6 +145,12 @@ export default function LeaderboardModal({
                 <p className="mt-2 text-xs font-bold text-[#6f3254]">
                   Your Rank: <span className="font-black text-[#8dc63f]">#{myRank}</span>{" "}
                   {!inTop20 && <span className="text-[#a57a92]">(outside Top 20)</span>}
+                </p>
+              )}
+              {(playedStore || lastGameScore !== undefined) && (
+                <p className="mt-2 text-xs font-bold text-[#6f3254]">
+                  {playedStore ? `Store: ${playedStore}` : "Store: -"}
+                  {lastGameScore !== undefined ? ` · Last game: ${lastGameScore}` : ""}
                 </p>
               )}
             </div>
