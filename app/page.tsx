@@ -766,6 +766,8 @@ export default function Page() {
     const trimmed = nickname.trim();
     setLoginLoading(true);
 
+    let finalStore = selectedStore;
+
     try {
       const key = normalizeNick(trimmed);
       const { data } = await supabase
@@ -778,12 +780,18 @@ export default function Page() {
 
       const dbStore = (data?.[0] as { store?: string } | undefined)?.store?.trim();
       if (dbStore && dbStore !== "__ALL__" && STORE_OPTIONS.includes(dbStore)) {
+        finalStore = dbStore;
         setSelectedStore(dbStore);
         localStorage.setItem("selectedStore", dbStore);
       }
     } catch {
       // fail silently — use the store selected on the login form
     }
+
+    // Reset best score display to this user's own local history
+    const myLocalBest = readSyncedLocalAllTimeBest(trimmed, finalStore) ?? 0;
+    localStorage.setItem("bestScore", String(myLocalBest));
+    setBest(myLocalBest);
 
     localStorage.setItem("nickname", trimmed);
     setAuthNick(trimmed);
