@@ -128,22 +128,26 @@ export default function AdminPage() {
 
   const filteredRows = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return rows.filter((row) => {
-      const normalizedStore = (row.store ?? "").trim().toLowerCase();
-      const normalizedFilter = storeFilter.trim().toLowerCase();
-      const storeOk =
-        !supportsStore || storeFilter === "__ALL__" || normalizedStore === normalizedFilter;
-      if (!storeOk) return false;
-      if (!term) return true;
-      return (
-        row.nickname_display.toLowerCase().includes(term) ||
-        row.nickname_key.toLowerCase().includes(term) ||
-        (row.store ?? "").toLowerCase().includes(term)
-      );
-    });
+    return rows
+      .filter((row) => {
+        const normalizedStore = (row.store ?? "").trim().toLowerCase();
+        const normalizedFilter = storeFilter.trim().toLowerCase();
+        const storeOk =
+          !supportsStore || storeFilter === "__ALL__" || normalizedStore === normalizedFilter;
+        if (!storeOk) return false;
+        if (!term) return true;
+        return (
+          row.nickname_display.toLowerCase().includes(term) ||
+          row.nickname_key.toLowerCase().includes(term) ||
+          (row.store ?? "").toLowerCase().includes(term)
+        );
+      })
+      .sort((a, b) => b.score - a.score || a.nickname_key.localeCompare(b.nickname_key));
   }, [rows, search, storeFilter]);
 
   const totalUsers = useMemo(() => new Set(rows.map((r) => r.nickname_key)).size, [rows]);
+
+  const isStoreFiltered = supportsStore && storeFilter !== "__ALL__";
 
   const deleteUserScores = async (nicknameKey: string, nicknameDisplay: string) => {
     const token = adminToken.trim();
@@ -346,6 +350,66 @@ export default function AdminPage() {
           </p>
         )}
 
+        {/* Store leaderboard view — shown when a specific store is selected */}
+        {isStoreFiltered && (
+          <div className="mb-4 overflow-hidden rounded-2xl border border-[#f3c7dd] bg-white shadow-[0_12px_24px_rgba(150,9,83,0.12)]">
+            <div className="bg-[linear-gradient(135deg,#fff1f8,#f8c8df)] px-4 py-3">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#960953]">Store Leaderboard</p>
+              <p className="mt-0.5 truncate text-base font-black text-[#4b0b31]">{storeFilter}</p>
+              <p className="text-xs font-semibold text-[#7f4a66]">{filteredRows.length} players · ranked by score</p>
+            </div>
+            <div className="grid grid-cols-[44px_1fr_80px_100px] bg-[#fff2f8] px-4 py-2 text-xs font-black text-[#8a5a75]">
+              <div>RANK</div>
+              <div>NICKNAME</div>
+              <div className="text-right">SCORE</div>
+              <div className="text-right">ACTION</div>
+            </div>
+            {loading ? (
+              <div className="px-4 py-8 text-sm font-semibold text-[#8b6178]">Loading...</div>
+            ) : filteredRows.length === 0 ? (
+              <div className="px-4 py-8 text-sm font-semibold text-[#8b6178]">No players found for this store.</div>
+            ) : (
+              <div className="max-h-[60vh] overflow-auto">
+                {filteredRows.map((row, idx) => {
+                  const rank = idx === 0 || filteredRows[idx - 1].score !== row.score ? idx + 1 : null;
+                  const displayRank = rank ?? "·";
+                  const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : null;
+                  return (
+                    <div
+                      key={`${row.nickname_key}-${row.store ?? "-"}`}
+                      className={`grid grid-cols-[44px_1fr_80px_100px] items-center border-t border-[#f9d7e8] px-4 py-3 ${
+                        idx < 3 ? "bg-[#fffcfe]" : ""
+                      }`}
+                    >
+                      <div className="text-sm font-black text-[#6b1f49]">
+                        {medal ?? <span className="text-[#8d6280]">{displayRank}</span>}
+                      </div>
+                      <div className="min-w-0 pr-2">
+                        <p className="truncate font-black text-[#4e1434]">{row.nickname_display}</p>
+                        <p className="truncate text-[11px] font-semibold text-[#a07090]">
+                          {row.updated_at ? new Date(row.updated_at).toLocaleDateString() : ""}
+                        </p>
+                      </div>
+                      <div className="text-right text-lg font-black text-[#960953]">{row.score}</div>
+                      <div className="text-right">
+                        <button
+                          type="button"
+                          onClick={() => void deleteUserScores(row.nickname_key, row.nickname_display)}
+                          disabled={deletingKey === row.nickname_key}
+                          className="rounded-lg bg-[#cb225e] px-3 py-1.5 text-xs font-black text-white disabled:opacity-60"
+                        >
+                          {deletingKey === row.nickname_key ? "..." : "Delete"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Full admin table — always shown */}
         <div className="overflow-hidden rounded-2xl border border-[#f3c7dd] bg-white shadow-[0_12px_24px_rgba(150,9,83,0.12)]">
           <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_120px] bg-[#fff2f8] px-4 py-3 text-xs font-black text-[#8a5a75]">
             <div>Nickname</div>
@@ -362,20 +426,23 @@ export default function AdminPage() {
             <div className="px-4 py-8 text-sm font-semibold text-[#8b6178]">No records found.</div>
           ) : (
             <div className="max-h-[65vh] overflow-auto">
-              {filteredRows.map((row) => (
+              {filteredRows.map((row, idx) => (
                 <div
                   key={`${row.nickname_key}-${row.store ?? "-"}-${row.updated_at}`}
                   className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_120px] border-t border-[#f9d7e8] px-4 py-3 text-sm"
                 >
                   <div className="min-w-0">
-                    <p className="truncate font-black text-[#4e1434]">{row.nickname_display}</p>
+                    <p className="truncate font-black text-[#4e1434]">
+                      <span className="mr-1.5 text-xs font-semibold text-[#b08090]">#{idx + 1}</span>
+                      {row.nickname_display}
+                    </p>
                     <p className="truncate text-xs font-semibold text-[#8d6280]">{row.nickname_key}</p>
                   </div>
                   <div className="font-black text-[#7d1148]">{row.score}</div>
                   <div className="truncate font-semibold text-[#5f2b4b]">{row.store ?? "-"}</div>
                   <div className="font-semibold text-[#5f2b4b]">{characterLabel(row.character)}</div>
                   <div className="font-semibold text-[#6a3b58]">
-                    {new Date(row.updated_at).toLocaleDateString()}
+                    {row.updated_at ? new Date(row.updated_at).toLocaleDateString() : "-"}
                   </div>
                   <div className="text-right">
                     <button

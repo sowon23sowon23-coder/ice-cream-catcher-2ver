@@ -22,14 +22,14 @@ export async function GET(req: NextRequest) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const buildQuery = (selectColumns: string, supportsStoreFilter: boolean, withUpdatedAtOrder: boolean) => {
+  const buildQuery = (selectColumns: string, supportsStoreFilter: boolean, withScoreOrder: boolean) => {
     let query = adminSupabase
       .from("leaderboard_best_v2")
       .select(selectColumns)
       .limit(5000);
 
-    if (withUpdatedAtOrder) {
-      query = query.order("updated_at", { ascending: false });
+    if (withScoreOrder) {
+      query = query.order("score", { ascending: false }).order("updated_at", { ascending: true });
     }
 
     if (supportsStoreFilter && store && store !== "__ALL__") {
