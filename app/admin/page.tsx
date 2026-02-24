@@ -54,13 +54,7 @@ export default function AdminPage() {
 
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (storeFilter && storeFilter !== "__ALL__") {
-        params.set("store", storeFilter);
-      }
-      const query = params.toString();
-
-      const res = await fetch(`/api/admin/list${query ? `?${query}` : ""}`, {
+      const res = await fetch("/api/admin/list", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
