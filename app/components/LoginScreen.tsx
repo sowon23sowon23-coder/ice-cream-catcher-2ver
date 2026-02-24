@@ -145,7 +145,7 @@ export default function LoginScreen({
               <span className="ml-2 text-[10px] font-semibold normal-case text-[#a07090]">Checking...</span>
             )}
             {lockedStore && (
-              <span className="ml-2 text-[10px] font-semibold normal-case text-[#c13f63]">🔒 Locked</span>
+              <span className="ml-2 text-[10px] font-semibold normal-case text-[#c13f63]">?�� Locked</span>
             )}
           </label>
           <StoreCombobox
@@ -157,7 +157,7 @@ export default function LoginScreen({
               if (store) setStoreError(null);
             }}
             disabled={!!lockedStore}
-            placeholder="Search store…"
+            placeholder="Search store??
             wrapperClassName="mt-1"
             inputClassName={`w-full rounded-xl border px-3 py-2 text-sm font-semibold text-[#4b0f31] outline-none transition ${
               lockedStore
@@ -167,7 +167,8 @@ export default function LoginScreen({
           />
           {lockedStore ? (
             <p className="mt-1 text-xs font-semibold text-[#a07090]">
-              이 닉네임은 이 매장에 등록되어 있습니다. 변경하려면 관리자에서 삭제 후 재등록하세요.
+              This nickname is already registered to a store. To change stores, delete the nickname and register
+              again.
             </p>
           ) : storeError ? (
             <p className="mt-1 text-xs font-bold text-[#c13f63]">{storeError}</p>
@@ -186,3 +187,4 @@ export default function LoginScreen({
     </main>
   );
 }
+
