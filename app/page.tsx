@@ -802,13 +802,19 @@ export default function Page() {
 
   return (
     <>
-      <main className="fixed inset-0 overflow-auto bg-[radial-gradient(circle_at_15%_5%,#ffffff_0%,#ffeef8_35%,#f8d5e8_100%)] flex items-center justify-center p-4">
-        <div className="flex w-full max-w-[390px] items-center justify-center">
+      <main className="fixed inset-0 overflow-auto bg-[radial-gradient(circle_at_15%_5%,#ffffff_0%,#ffeef8_35%,#f8d5e8_100%)] flex items-center justify-center p-4 md:p-6">
+        <div
+          className={`flex w-full items-center ${
+            phase === "home"
+              ? "max-w-[980px] gap-4 lg:justify-center"
+              : "max-w-[390px] justify-center"
+          }`}
+        >
           <div
-            className={`relative overflow-hidden rounded-[2rem] ${
+            className={`relative w-full max-w-[390px] overflow-hidden rounded-[2rem] ${
               phase === "login"
                 ? ""
-                : "bg-white/95 shadow-[0_22px_60px_rgba(150,9,83,0.28)] ring-1 ring-[#f4c2db]"
+                : "bg-white/95 shadow-[0_22px_60px_rgba(150,9,83,0.28)] ring-1 ring-[var(--yl-card-border)]"
             }`}
             style={{
               width: "100%",
@@ -912,6 +918,48 @@ export default function Page() {
               />
             )}
           </div>
+
+          {phase === "home" && (
+            <aside className="hidden h-[min(844px,calc(100dvh-2rem))] w-full max-w-[520px] rounded-[2rem] border border-[var(--yl-card-border)] bg-white/85 p-6 shadow-[0_20px_56px_rgba(150,9,83,0.18)] backdrop-blur-sm lg:flex lg:flex-col">
+              <p className="text-sm font-black uppercase tracking-[0.14em] text-[var(--yl-primary)]">
+                Play Guide
+              </p>
+              <h2 className="mt-1 text-3xl font-black text-[var(--yl-ink-strong)]">
+                Catch Fast, Miss Less
+              </h2>
+
+              <div className="mt-5 rounded-2xl border border-[var(--yl-card-border)] bg-[var(--yl-card-bg)] p-4">
+                <p className="text-sm font-black uppercase tracking-[0.1em] text-[var(--yl-primary)]">
+                  Current Best
+                </p>
+                <p className="mt-1 text-4xl font-black text-[var(--yl-ink-strong)]">{best}</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--yl-ink-muted)]">
+                  Use Mission mode for control, then Time Attack for max score.
+                </p>
+              </div>
+
+              <div className="mt-4 grid gap-3">
+                <div className="rounded-2xl border border-[var(--yl-card-border)] bg-white p-4">
+                  <p className="text-base font-black text-[var(--yl-ink-strong)]">Pointer Control</p>
+                  <p className="mt-1 text-sm font-semibold text-[var(--yl-ink-muted)]">
+                    Keep the cup near center, move only when item direction is clear.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--yl-card-border)] bg-white p-4">
+                  <p className="text-base font-black text-[var(--yl-ink-strong)]">Mission Mode</p>
+                  <p className="mt-1 text-sm font-semibold text-[var(--yl-ink-muted)]">
+                    Ignore non-target toppings completely. Misses cost more than waiting.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--yl-card-border)] bg-white p-4">
+                  <p className="text-base font-black text-[var(--yl-ink-strong)]">Time Attack</p>
+                  <p className="mt-1 text-sm font-semibold text-[var(--yl-ink-muted)]">
+                    Build streak early. The first 10 seconds sets your final pace.
+                  </p>
+                </div>
+              </div>
+            </aside>
+          )}
         </div>
       </main>
 

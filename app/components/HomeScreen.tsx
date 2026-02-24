@@ -85,36 +85,37 @@ export default function HomeScreen({
               <span className="text-xl">🍦</span>
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#960953]">Yogurtland</p>
-              <h1 className="text-xl font-black text-[#4b0b31]">Ice Cream Catcher</h1>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--yl-primary)]">Yogurtland</p>
+              <h1 className="text-xl font-black text-[var(--yl-ink-strong)]">Ice Cream Catcher</h1>
             </div>
           </div>
           <button
             type="button"
             onClick={onOpenAdmin}
             aria-label="Open admin page"
-            className="grid h-9 w-9 place-items-center rounded-full border border-[#f2bad5] bg-white text-base shadow-sm transition hover:-translate-y-0.5"
+            title="Open admin page"
+            className="grid h-9 w-9 place-items-center rounded-full border border-[var(--yl-card-border)] bg-white text-base shadow-sm transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
           >
             🛠️
           </button>
         </header>
 
         {nickname ? (
-          <p className="mb-3 text-xs font-black uppercase tracking-[0.12em] text-[#7d3f61]">
-            Logged in as <span className="text-[#960953]">{nickname}</span>
+          <p className="mb-3 text-sm font-black uppercase tracking-[0.1em] text-[var(--yl-ink-muted)]">
+            Logged in as <span className="text-[var(--yl-primary)]">{nickname}</span>
           </p>
         ) : null}
 
-        <section className="mb-4 rounded-3xl border border-[#f8d2e4] bg-white/85 p-5 shadow-[0_16px_40px_rgba(150,9,83,0.16)] backdrop-blur-sm">
-          <div className="flex items-center justify-between rounded-2xl bg-[#fff3f9] px-4 py-3 ring-1 ring-[#f5c7de]">
+        <section className="mb-4 rounded-3xl border border-[var(--yl-card-border)] bg-white/85 p-5 shadow-[0_16px_40px_rgba(150,9,83,0.16)] backdrop-blur-sm">
+          <div className="flex items-center justify-between rounded-2xl bg-[var(--yl-card-bg)] px-4 py-3 ring-1 ring-[var(--yl-card-border)]">
             <div>
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#960953]">Best Score</p>
-              <p className="text-2xl font-black text-[#4b0b31]">{bestScore}</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--yl-primary)]">Best Score</p>
+              <p className="text-2xl font-black text-[var(--yl-ink-strong)]">{bestScore}</p>
             </div>
             <button
               type="button"
               onClick={onOpenLeaderboard}
-              className="rounded-full border border-[#f2bad5] bg-white px-3 py-1.5 text-xs font-black text-[#960953] shadow-sm transition hover:-translate-y-0.5"
+              className="rounded-full border border-[var(--yl-card-border)] bg-white px-3 py-1.5 text-sm font-black text-[var(--yl-primary)] shadow-sm transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
             >
               Leaderboard
             </button>
@@ -122,7 +123,7 @@ export default function HomeScreen({
         </section>
 
         <section className="mb-3">
-          <p className="mb-2 text-xs font-black uppercase tracking-[0.18em] text-[#960953]">Pick your cup</p>
+          <p className="mb-2 text-sm font-black uppercase tracking-[0.14em] text-[var(--yl-primary)]">Pick your cup</p>
           <div className="grid grid-cols-3 gap-2">
             {CHARACTERS.map((c) => {
               const active = c.id === character;
@@ -143,16 +144,16 @@ export default function HomeScreen({
                   >
                     <img src={`/${c.id}.png`} alt={c.label} className="h-10 w-10 select-none" draggable={false} />
                   </div>
-                  <p className="text-[11px] font-black text-[#4f1736]">{c.label}</p>
-                  <p className="text-[10px] font-bold text-[#8c5c77]">{c.flavor}</p>
+                  <p className="text-xs font-black text-[var(--yl-ink-strong)]">{c.label}</p>
+                  <p className="text-xs font-bold text-[var(--yl-ink-muted)]">{c.flavor}</p>
                 </button>
               );
             })}
           </div>
         </section>
 
-        <section className="mb-3 rounded-2xl border border-[#f8d2e4] bg-white/80 p-3">
-          <p className="mb-2 text-xs font-black uppercase tracking-[0.18em] text-[#960953]">Game mode</p>
+        <section className="mb-3 rounded-2xl border border-[var(--yl-card-border)] bg-white/80 p-3">
+          <p className="mb-2 text-sm font-black uppercase tracking-[0.14em] text-[var(--yl-primary)]">Game mode</p>
           <div className="space-y-2">
             {MODES.map((m) => {
               const active = m.id === mode;
@@ -163,27 +164,27 @@ export default function HomeScreen({
                   onClick={() => setMode(m.id)}
                   className={`w-full rounded-xl px-3 py-2 text-left transition ${
                     active
-                      ? "bg-[#960953] text-white shadow-[0_8px_16px_rgba(150,9,83,0.32)]"
-                      : "bg-[#fff2f8] text-[#5a2343] hover:bg-[#fee8f4]"
+                      ? "bg-[var(--yl-primary)] text-white shadow-[0_8px_16px_rgba(150,9,83,0.32)]"
+                      : "bg-[var(--yl-card-bg)] text-[var(--yl-ink-strong)] hover:bg-[#fee8f4]"
                   }`}
                 >
                   <p className="text-sm font-black">{m.label}</p>
-                  <p className={`text-xs font-semibold ${active ? "text-white/90" : "text-[#8a5b76]"}`}>{m.detail}</p>
+                  <p className={`text-xs font-semibold ${active ? "text-white/95" : "text-[var(--yl-ink-muted)]"}`}>{m.detail}</p>
                 </button>
               );
             })}
           </div>
         </section>
 
-        <section className="mt-auto rounded-2xl border border-[#f8d2e4] bg-white/85 p-3 shadow-[0_8px_22px_rgba(150,9,83,0.14)]">
+        <section className="mt-auto rounded-2xl border border-[var(--yl-card-border)] bg-white/85 p-3 shadow-[0_8px_22px_rgba(150,9,83,0.14)]">
           <button
             type="button"
             onClick={startGame}
-            className="mt-3 w-full rounded-xl bg-[linear-gradient(135deg,#960953,#c54b86)] px-4 py-3 text-sm font-black uppercase tracking-[0.12em] text-white shadow-[0_14px_24px_rgba(150,9,83,0.35)] transition hover:-translate-y-0.5"
+            className="mt-3 w-full rounded-xl bg-[linear-gradient(135deg,var(--yl-primary),var(--yl-primary-soft))] px-4 py-3 text-base font-black uppercase tracking-[0.1em] text-white shadow-[0_14px_24px_rgba(150,9,83,0.35)] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
           >
             Start Game
           </button>
-          <p className="mt-2 text-center text-[11px] font-bold text-[#8d5b76]">
+          <p className="mt-2 text-center text-xs font-bold text-[var(--yl-ink-muted)]">
             Selected: {selectedCharacter.label} · {MODES.find((m) => m.id === mode)?.label}
           </p>
         </section>

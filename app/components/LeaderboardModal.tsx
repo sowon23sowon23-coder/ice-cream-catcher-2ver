@@ -79,29 +79,30 @@ export default function LeaderboardModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-[#2b0d1f]/45 backdrop-blur-[2px]" onClick={onClose} />
 
-      <div className="relative w-full max-w-md overflow-hidden rounded-[1.7rem] border border-[#f2bfd9] bg-white shadow-[0_24px_50px_rgba(150,9,83,0.28)]">
+      <div className="relative w-full max-w-md overflow-hidden rounded-[1.7rem] border border-[var(--yl-card-border)] bg-white shadow-[0_24px_50px_rgba(150,9,83,0.28)]">
         <div className="bg-[linear-gradient(135deg,#fff1f8,#f8c8df)] px-5 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#960953]">Top 20</p>
-              <h2 className="text-2xl font-black text-[#4b0b31]">Leaderboard</h2>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--yl-primary)]">Top 20</p>
+              <h2 className="text-2xl font-black text-[var(--yl-ink-strong)]">Leaderboard</h2>
             </div>
             <button
               onClick={onClose}
-              className="grid h-10 w-10 place-items-center rounded-2xl border border-[#efb8d4] bg-white text-[#7e164b] shadow-sm"
+              className="grid h-10 w-10 place-items-center rounded-2xl border border-[var(--yl-card-border)] bg-white text-[var(--yl-primary-deep)] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
               aria-label="close"
+              title="Close leaderboard"
               type="button"
             >
-              X
+              ×
             </button>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-white p-1 ring-1 ring-[#f4c5dd]">
+          <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-white p-1 ring-1 ring-[var(--yl-card-border)]">
             <button
               type="button"
               onClick={() => onModeChange("today")}
               className={`rounded-lg py-2 text-sm font-black transition ${
-                mode === "today" ? "bg-[#960953] text-white" : "text-[#6f3254]"
+                mode === "today" ? "bg-[var(--yl-primary)] text-white" : "text-[var(--yl-ink-muted)]"
               }`}
             >
               Today
@@ -110,7 +111,7 @@ export default function LeaderboardModal({
               type="button"
               onClick={() => onModeChange("all")}
               className={`rounded-lg py-2 text-sm font-black transition ${
-                mode === "all" ? "bg-[#960953] text-white" : "text-[#6f3254]"
+                mode === "all" ? "bg-[var(--yl-primary)] text-white" : "text-[var(--yl-ink-muted)]"
               }`}
             >
               All-time
@@ -123,8 +124,8 @@ export default function LeaderboardModal({
               onClick={() => onStoreChange("__ALL__")}
               className={`shrink-0 rounded-lg px-3 py-2 text-sm font-black transition ${
                 selectedStore === "__ALL__"
-                  ? "bg-[#960953] text-white"
-                  : "border border-[#efb8d4] bg-white text-[#6f3254]"
+                  ? "bg-[var(--yl-primary)] text-white"
+                  : "border border-[var(--yl-card-border)] bg-white text-[var(--yl-ink-muted)]"
               }`}
             >
               All Stores
@@ -135,32 +136,32 @@ export default function LeaderboardModal({
               onChange={(store) => onStoreChange(store)}
               placeholder="Search store…"
               wrapperClassName="min-w-0 flex-1"
-              inputClassName="w-full rounded-lg border border-[#efb8d4] bg-white px-3 py-2 text-sm font-semibold text-[#6f3254] outline-none"
+              inputClassName="w-full rounded-lg border border-[var(--yl-card-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--yl-ink-muted)] outline-none focus:border-[var(--yl-primary)]"
             />
           </div>
         </div>
 
         <div className="px-5 pb-5 pt-4">
           {(myNickname || myScore !== undefined) && (
-            <div className="mb-3 rounded-2xl border border-[#f2c2da] bg-[#fff4fa] px-4 py-3">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-[#960953]">
+            <div className="mb-3 rounded-2xl border border-[var(--yl-card-border)] bg-[var(--yl-card-bg)] px-4 py-3">
+              <p className="text-sm font-black uppercase tracking-[0.1em] text-[var(--yl-primary)]">
                 {mode === "today" ? "Today best" : "Your best"}
               </p>
               <div className="mt-1 flex items-center justify-between">
-                <div className="truncate pr-3 font-black text-[#4b0f31]">{myNickname ?? "-"}</div>
-                <div className="text-lg font-black text-[#960953]">{myScore ?? "-"}</div>
+                <div className="truncate pr-3 font-black text-[var(--yl-ink-strong)]">{myNickname ?? "-"}</div>
+                <div className="text-lg font-black text-[var(--yl-primary)]">{myScore ?? "-"}</div>
               </div>
               {myRank !== undefined && (
-                <p className="mt-2 text-xs font-bold text-[#6f3254]">
-                  Your Rank: <span className="font-black text-[#8dc63f]">#{myRank}</span>{" "}
-                  {!inTop20 && <span className="text-[#a57a92]">(outside Top 20)</span>}
+                <p className="mt-2 text-sm font-bold text-[var(--yl-ink-muted)]">
+                  Your Rank: <span className="font-black text-[var(--yl-green)]">#{myRank}</span>{" "}
+                  {!inTop20 && <span className="text-[#8e6a81]">(outside Top 20)</span>}
                 </p>
               )}
             </div>
           )}
 
-          <div className="overflow-hidden rounded-2xl border border-[#f3c7dd]">
-            <div className="grid grid-cols-[52px_1fr_70px_84px] bg-[#fff2f8] px-4 py-3 text-xs font-black text-[#8a5a75]">
+          <div className="overflow-hidden rounded-2xl border border-[var(--yl-card-border)]">
+            <div className="grid grid-cols-[52px_1fr_70px_84px] bg-[var(--yl-card-bg)] px-4 py-3 text-xs font-black text-[#8a5a75]">
               <div>RANK</div>
               <div>NICK</div>
               <div>CHAR</div>
@@ -184,13 +185,13 @@ export default function LeaderboardModal({
                         isMe ? "bg-[#fff1f8]" : ""
                       }`}
                     >
-                      <div className="font-black text-[#6b1f49]">{r.rank}</div>
-                      <div className="truncate font-bold text-[#4e1434]">
+                      <div className="font-black text-[var(--yl-primary-deep)]">{r.rank}</div>
+                      <div className="truncate font-bold text-[var(--yl-ink-strong)]">
                         {r.nickname}
-                        {isMe ? <span className="ml-2 text-xs font-black text-[#8dc63f]">YOU</span> : null}
+                        {isMe ? <span className="ml-2 text-xs font-black text-[var(--yl-green)]">YOU</span> : null}
                         {r.date ? <span className="ml-2 text-xs font-semibold text-[#ac7f95]">{r.date}</span> : null}
                       </div>
-                      <div className="flex items-center gap-1 text-xs font-bold text-[#7d4562]">
+                      <div className="flex items-center gap-1 text-xs font-bold text-[var(--yl-ink-muted)]">
                         {r.character ? (
                           <img
                             src={`/${r.character}.png`}
@@ -201,7 +202,7 @@ export default function LeaderboardModal({
                         ) : null}
                         <span className="truncate">{characterLabel(r.character)}</span>
                       </div>
-                      <div className="text-right font-black text-[#7d1148]">{r.score}</div>
+                      <div className="text-right font-black text-[var(--yl-primary)]">{r.score}</div>
                     </div>
                   );
                 })}
@@ -211,7 +212,7 @@ export default function LeaderboardModal({
 
           <button
             onClick={onClose}
-            className="mt-4 w-full rounded-xl border border-[#f2bed8] bg-[#fff4fa] px-4 py-3 font-black text-[#6f2b50]"
+            className="mt-4 w-full rounded-xl border border-[var(--yl-card-border)] bg-[var(--yl-card-bg)] px-4 py-3 font-black text-[var(--yl-ink-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
             type="button"
           >
             Back

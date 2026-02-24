@@ -7,13 +7,21 @@
 :root {
   --yl-primary: #960953;
   --yl-primary-deep: #6f073e;
+  --yl-primary-soft: #c54b86;
   --yl-pink: #f7b9d4;
   --yl-yellow-green: #8dc63f;
   --yl-mint: #fff3fa;
   --yl-ink: #3f1030;
+  --yl-ink-strong: #4b0b31;
+  --yl-ink-muted: #6f3254;
   --yl-green: #8dc63f;
   --yl-berry: #f7b9d4;
   --yl-yellow: #ffd45f;
+  --yl-card-border: #f2bfd9;
+  --yl-card-bg: #fff4fa;
+  --yl-focus-ring: #d85c94;
+  --yl-danger: #dc2626;
+  --yl-warning: #f97316;
 }
 
 * {
@@ -76,4 +84,15 @@ h3,
 
 .animate-card-entrance {
   animation: cardEntrance 0.4s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

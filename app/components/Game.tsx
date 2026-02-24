@@ -838,10 +838,10 @@ export default function Game({
             opacity: 0;
           }
           10% {
-            opacity: 0.45;
+            opacity: 0.32;
           }
           100% {
-            transform: translateY(-130px) scale(1.15);
+            transform: translateY(-100px) scale(1.08);
             opacity: 0;
           }
         }
@@ -860,12 +860,12 @@ export default function Game({
           opacity: 0;
         }
         @keyframes warningPulse {
-          0%   { opacity: 0.06; }
-          50%  { opacity: 0.26; }
-          100% { opacity: 0.06; }
+          0%   { opacity: 0.04; }
+          50%  { opacity: 0.16; }
+          100% { opacity: 0.04; }
         }
         .warning-pulse {
-          animation: warningPulse 0.8s ease-in-out infinite;
+          animation: warningPulse 1.35s ease-in-out infinite;
         }
         @keyframes revealFadeIn {
           from { opacity: 0; transform: translateY(18px); }
@@ -879,14 +879,14 @@ export default function Game({
       <div className="w-full max-w-md">
         <div className="mb-3 flex gap-2">
           {/* Score */}
-          <div className={`flex flex-col items-center rounded-2xl py-2 shadow ${mode === "timeAttack" ? "flex-[2] bg-[#960953]" : "flex-1 bg-white/85 ring-1 ring-[#f4c2db]"}`}>
-            <span className={`text-[9px] font-black uppercase tracking-widest ${mode === "timeAttack" ? "text-white/60" : "text-[#960953]"}`}>SCORE</span>
-            <span className={`font-black leading-tight ${mode === "timeAttack" ? "text-3xl text-white" : "text-2xl text-[#4b0b31]"}`}>{score}</span>
+          <div className={`flex flex-col items-center rounded-2xl py-2 shadow ${mode === "timeAttack" ? "flex-[2] bg-[var(--yl-primary)]" : "flex-1 bg-white/90 ring-1 ring-[var(--yl-card-border)]"}`}>
+            <span className={`text-xs font-black uppercase tracking-[0.14em] ${mode === "timeAttack" ? "text-white/85" : "text-[var(--yl-primary)]"}`}>SCORE</span>
+            <span className={`font-black leading-tight ${mode === "timeAttack" ? "text-3xl text-white" : "text-2xl text-[var(--yl-ink-strong)]"}`}>{score}</span>
           </div>
           {/* Lives — free & mission only */}
           {mode !== "timeAttack" && (
-            <div className="flex flex-1 flex-col items-center rounded-2xl bg-white/85 py-2 shadow ring-1 ring-[#f4c2db]">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#960953]">LIVES</span>
+            <div className="flex flex-1 flex-col items-center rounded-2xl bg-white/90 py-2 shadow ring-1 ring-[var(--yl-card-border)]">
+              <span className="text-xs font-black uppercase tracking-[0.14em] text-[var(--yl-primary)]">LIVES</span>
               <div className="mt-0.5 flex gap-0.5">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <span key={i} className="text-lg leading-none">{i < lives ? "❤️" : "🤍"}</span>
@@ -896,8 +896,8 @@ export default function Game({
           )}
           {/* Level — free play only */}
           {mode === "free" && (
-            <div className="flex flex-1 flex-col items-center rounded-2xl bg-[#960953] py-2 shadow">
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/60">LEVEL</span>
+            <div className="flex flex-1 flex-col items-center rounded-2xl bg-[var(--yl-primary)] py-2 shadow">
+              <span className="text-xs font-black uppercase tracking-[0.14em] text-white/85">LEVEL</span>
               <span className="text-2xl font-black leading-tight text-white">{difficultyLevel}</span>
             </div>
           )}
@@ -906,13 +906,13 @@ export default function Game({
             <div
               className={`flex flex-[2] flex-col items-center rounded-2xl py-2 shadow transition-colors duration-300 ${
                 timeLeft <= 5
-                  ? "bg-red-500 ring-2 ring-red-300"
+                  ? "bg-red-600 ring-2 ring-red-300"
                   : timeLeft <= 10
-                    ? "bg-orange-400"
-                    : "bg-[#960953]"
+                    ? "bg-orange-500"
+                    : "bg-[var(--yl-primary)]"
               }`}
             >
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/60">⏱ TIME</span>
+              <span className="text-xs font-black uppercase tracking-[0.14em] text-white/85">⏱ TIME</span>
               <span className={`font-black leading-tight text-white ${timeLeft <= 5 ? "text-4xl" : "text-3xl"}`}>
                 {timeLeft}s
               </span>
@@ -926,10 +926,10 @@ export default function Game({
             <div
               className={`h-full rounded-full transition-all duration-1000 ease-linear ${
                 timeLeft <= 2
-                  ? "bg-red-500"
+                  ? "bg-red-600"
                   : timeLeft <= 4
-                    ? "bg-orange-400"
-                    : "bg-[#960953]"
+                    ? "bg-orange-500"
+                    : "bg-[var(--yl-primary)]"
               }`}
               style={{ width: `${(timeLeft / 30) * 100}%` }}
             />
@@ -938,7 +938,7 @@ export default function Game({
 
         {mode === "mission" && missionTargets.length > 0 && (
           <div className="mb-3 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-2 text-center text-sm font-bold text-amber-900">
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-amber-700">
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-amber-800">
               Mission Progress: {Math.min(score, MISSION_GOAL_SCORE)}/{MISSION_GOAL_SCORE}
             </p>
             <div className="mx-auto mt-2 h-2 w-full max-w-[220px] overflow-hidden rounded-full bg-amber-100 ring-1 ring-amber-200">
@@ -985,16 +985,16 @@ export default function Game({
           </div>
 
           <div className="absolute inset-0 pointer-events-none z-0">
-            {[8, 22, 34, 48, 61, 77, 90].map((left, idx) => (
+            {[12, 32, 54, 78].map((left, idx) => (
               <span
                 key={`bubble-${left}`}
                 className="bubble-float absolute bottom-4 rounded-full bg-white/35"
                 style={{
                   left: `${left}%`,
-                  width: `${10 + (idx % 3) * 4}px`,
-                  height: `${10 + (idx % 3) * 4}px`,
-                  animationDelay: `${idx * 0.65}s`,
-                  animationDuration: `${4.8 + (idx % 3) * 1.2}s`,
+                  width: `${10 + (idx % 2) * 4}px`,
+                  height: `${10 + (idx % 2) * 4}px`,
+                  animationDelay: `${idx * 0.95}s`,
+                  animationDuration: `${6.2 + (idx % 2) * 1.5}s`,
                 }}
               />
             ))}
@@ -1022,13 +1022,13 @@ export default function Game({
           {mode === "timeAttack" && phase === "play" && timeLeft <= 10 && timeLeft > 0 && (
             <div
               className={`pointer-events-none absolute inset-0 z-10 ${
-                timeLeft <= 5 ? "warning-pulse bg-red-500/25" : "warning-pulse bg-orange-400/18"
+                timeLeft <= 5 ? "warning-pulse bg-red-500/20" : "bg-orange-400/10"
               }`}
             />
           )}
 
           {mode === "free" && phase === "play" && difficultyNotice && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 rounded-full bg-fuchsia-600/90 text-white text-xs font-extrabold px-4 py-2 shadow-lg">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 rounded-full bg-[var(--yl-primary)] text-white text-sm font-extrabold px-4 py-2 shadow-lg">
               {difficultyNotice}
             </div>
           )}
@@ -1087,8 +1087,8 @@ export default function Game({
 
               {phase === "over" && (
                 <>
-                  <div className="text-sm font-bold text-slate-700 mb-3">
-                    Your Score: <span className="font-black text-pink-600">{score}</span>
+                  <div className="mb-3 text-base font-bold text-[var(--yl-ink-muted)]">
+                    Your Score: <span className="font-black text-[var(--yl-primary)]">{score}</span>
                   </div>
 
                   {mode === "free" && (
@@ -1100,7 +1100,7 @@ export default function Game({
                           onGameOver?.(score);
                         }
                       }}
-                      className="px-10 py-4 rounded-full bg-[#960953] text-white font-extrabold shadow-lg active:scale-95 transition"
+                      className="px-10 py-4 rounded-full bg-[var(--yl-primary)] text-white font-extrabold shadow-lg transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
                     >
                       Leaderboard
                     </button>
@@ -1109,7 +1109,7 @@ export default function Game({
                   <button
                     type="button"
                     onClick={start}
-                    className="mt-3 px-10 py-4 rounded-full bg-pink-500 text-white font-extrabold shadow-lg active:scale-95 transition"
+                    className="mt-3 px-10 py-4 rounded-full border border-[var(--yl-primary)] bg-white text-[var(--yl-primary)] font-extrabold shadow-sm transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
                   >
                     Retry
                   </button>
@@ -1117,19 +1117,19 @@ export default function Game({
                   <button
                     type="button"
                     onClick={handleShare}
-                    className="mt-3 px-8 py-3 rounded-full bg-sky-500 text-white font-extrabold shadow-lg active:scale-95 transition"
+                    className="mt-3 px-8 py-3 rounded-full border border-[var(--yl-card-border)] bg-white/85 text-[var(--yl-ink-muted)] font-bold transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
                   >
                     Share With Friends
                   </button>
 
                   {shareNotice && (
-                    <div className="mt-2 text-xs font-bold text-slate-700">{shareNotice}</div>
+                    <div className="mt-2 text-sm font-bold text-[var(--yl-ink-muted)]">{shareNotice}</div>
                   )}
 
                   <button
                     type="button"
                     onClick={onExitToHome}
-                    className="mt-3 text-sm font-bold text-pink-700/80 underline underline-offset-4"
+                    className="mt-3 text-sm font-bold text-[var(--yl-primary-deep)] underline underline-offset-4"
                   >
                     Back to Home
                   </button>
@@ -1214,11 +1214,11 @@ export default function Game({
           <div className="reveal-fade-in flex h-[100dvh] max-h-[100dvh] w-full max-w-md flex-col items-center justify-between gap-2 px-3 py-2 text-center sm:gap-3 sm:px-4 sm:py-3">
             {/* Header */}
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#960953]">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--yl-primary)]">
                 Time Attack
               </p>
-              <h2 className="mt-0.5 text-3xl font-black text-[#4b0b31]">Time&apos;s Up! 🍦</h2>
-              <p className="mt-1 text-sm font-bold text-[#7d3060]">
+              <h2 className="mt-0.5 text-3xl font-black text-[var(--yl-ink-strong)]">Time&apos;s Up! 🍦</h2>
+              <p className="mt-1 text-base font-bold text-[var(--yl-ink-muted)]">
                 {score >= 25
                   ? "Amazing! 🌟"
                   : score >= 15
@@ -1230,9 +1230,9 @@ export default function Game({
             </div>
 
             {/* Score badge */}
-            <div className="rounded-2xl bg-white/85 px-8 py-2 shadow ring-1 ring-[#f4c2db] sm:px-9 sm:py-2.5">
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#960953]">Score</p>
-              <p className="text-4xl font-black text-[#4b0b31] sm:text-[2.6rem]">{score}</p>
+            <div className="rounded-2xl bg-white/90 px-8 py-2 shadow ring-1 ring-[var(--yl-card-border)] sm:px-9 sm:py-2.5">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--yl-primary)]">Score</p>
+              <p className="text-4xl font-black text-[var(--yl-ink-strong)] sm:text-[2.6rem]">{score}</p>
             </div>
 
             {/* Cup + toppings */}
@@ -1247,7 +1247,7 @@ export default function Game({
                   onError={() => setFinalCupLoadFailed(true)}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center rounded-[2rem] bg-white/45 ring-1 ring-[#f4c2db]">
+                <div className="flex h-full w-full items-center justify-center rounded-[2rem] bg-white/45 ring-1 ring-[var(--yl-card-border)]">
                   <span className="text-7xl">🍨</span>
                 </div>
               )}
@@ -1297,7 +1297,7 @@ export default function Game({
                     onGameOver?.(score);
                   }
                 }}
-                className="px-10 py-4 rounded-full bg-[#960953] text-white font-extrabold shadow-lg active:scale-95 transition"
+                className="px-10 py-4 rounded-full bg-[var(--yl-primary)] text-white font-extrabold shadow-lg transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
               >
                 Leaderboard
               </button>
@@ -1305,7 +1305,7 @@ export default function Game({
               <button
                 type="button"
                 onClick={start}
-                className="mt-3 px-10 py-4 rounded-full bg-pink-500 text-white font-extrabold shadow-lg active:scale-95 transition"
+                className="mt-3 px-10 py-4 rounded-full border border-[var(--yl-primary)] bg-white text-[var(--yl-primary)] font-extrabold shadow-sm transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
               >
                 Retry
               </button>
@@ -1313,19 +1313,19 @@ export default function Game({
               <button
                 type="button"
                 onClick={handleShare}
-                className="mt-3 px-8 py-3 rounded-full bg-sky-500 text-white font-extrabold shadow-lg active:scale-95 transition"
+                className="mt-3 px-8 py-3 rounded-full border border-[var(--yl-card-border)] bg-white/85 text-[var(--yl-ink-muted)] font-bold transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
               >
                 Share With Friends
               </button>
 
               {shareNotice && (
-                <div className="mt-2 text-xs font-bold text-slate-700">{shareNotice}</div>
+                <div className="mt-2 text-sm font-bold text-[var(--yl-ink-muted)]">{shareNotice}</div>
               )}
 
               <button
                 type="button"
                 onClick={onExitToHome}
-                className="mt-3 text-sm font-bold text-pink-700/80 underline underline-offset-4"
+                className="mt-3 text-sm font-bold text-[var(--yl-primary-deep)] underline underline-offset-4"
               >
                 Back to Home
               </button>
