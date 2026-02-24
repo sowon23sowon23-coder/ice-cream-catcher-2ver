@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import { STORE_OPTIONS } from "../lib/stores";
 import { supabase } from "../lib/supabaseClient";
 
@@ -26,10 +27,23 @@ function characterLabel(character?: CharId | null) {
 export default function AdminPage() {
   const [rows, setRows] = useState<AdminRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isAuthed, setIsAuthed] = useState(false);
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [storeFilter, setStoreFilter] = useState("__ALL__");
   const [adminToken, setAdminToken] = useState("");
+
+  const verifyAdminPassword = async (rawPassword: string) => {
+    const res = await fetch("/api/admin/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: rawPassword }),
+    });
+    return res.ok;
+  };
 
   const loadRows = async () => {
     setLoading(true);
@@ -57,13 +71,36 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    void loadRows();
+    const boot = async () => {
+      const saved = sessionStorage.getItem("adminPanelToken") || "";
+      if (!saved) {
+        setAuthLoading(false);
+        return;
+      }
+
+      try {
+        const ok = await verifyAdminPassword(saved);
+        if (ok) {
+          setAdminToken(saved);
+          setIsAuthed(true);
+        } else {
+          sessionStorage.removeItem("adminPanelToken");
+          setIsAuthed(false);
+        }
+      } catch {
+        setIsAuthed(false);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    void boot();
   }, []);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem("adminPanelToken") || "";
-    setAdminToken(saved);
-  }, []);
+    if (!isAuthed) return;
+    void loadRows();
+  }, [isAuthed]);
 
   const filteredRows = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -108,6 +145,10 @@ export default function AdminPage() {
 
       if (!res.ok) {
         console.error("Delete user score error:", json);
+        if (res.status === 401) {
+          sessionStorage.removeItem("adminPanelToken");
+          setIsAuthed(false);
+        }
         alert("Failed to delete this user's scores.");
       } else {
         sessionStorage.setItem("adminPanelToken", token);
@@ -120,6 +161,76 @@ export default function AdminPage() {
       setDeletingKey(null);
     }
   };
+
+  const onSubmitPassword = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setAuthError("");
+    const trimmed = password.trim();
+    if (!trimmed) {
+      setAuthError("Enter admin password.");
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      const ok = await verifyAdminPassword(trimmed);
+      if (!ok) {
+        setAuthError("Invalid password.");
+        setAuthLoading(false);
+        return;
+      }
+      sessionStorage.setItem("adminPanelToken", trimmed);
+      setAdminToken(trimmed);
+      setIsAuthed(true);
+      setPassword("");
+    } catch {
+      setAuthError("Failed to verify password.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  if (!isAuthed) {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_12%_8%,#ffffff_0%,#ffedf7_36%,#f9d3e7_100%)] p-4 sm:p-6">
+        <div className="mx-auto max-w-md">
+          <div className="rounded-3xl border border-[#f4c5dd] bg-white/90 p-6 shadow-[0_16px_36px_rgba(150,9,83,0.15)]">
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#960953]">Admin</p>
+            <h1 className="mt-1 text-2xl font-black text-[#4b0b31]">Enter Password</h1>
+            <p className="mt-2 text-sm font-semibold text-[#7f4a66]">
+              관리자 비밀번호를 입력하면 점수 삭제 기능을 사용할 수 있습니다.
+            </p>
+
+            <form onSubmit={onSubmitPassword} className="mt-4 space-y-3">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Admin password"
+                className="w-full rounded-xl border border-[#edb8d3] bg-white px-3 py-2 text-sm font-semibold text-[#5b2041] outline-none"
+              />
+              {authError ? <p className="text-sm font-bold text-[#b42357]">{authError}</p> : null}
+              <div className="flex items-center gap-2">
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="rounded-full bg-[linear-gradient(135deg,#960953,#c54b86)] px-4 py-2 text-sm font-black text-white disabled:opacity-60"
+                >
+                  {authLoading ? "Checking..." : "Enter Admin"}
+                </button>
+                <Link
+                  href="/"
+                  className="rounded-full border border-[#f2bad5] bg-white px-4 py-2 text-sm font-black text-[#960953]"
+                >
+                  Back to Game
+                </Link>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_12%_8%,#ffffff_0%,#ffedf7_36%,#f9d3e7_100%)] p-4 sm:p-6">
@@ -181,19 +292,6 @@ export default function AdminPage() {
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-[#f4c5dd] bg-white/90 p-3 sm:flex-row sm:items-center">
-          <label className="text-xs font-black uppercase tracking-[0.14em] text-[#8c4a6a] sm:w-[170px]">
-            Admin Token
-          </label>
-          <input
-            type="password"
-            value={adminToken}
-            onChange={(e) => setAdminToken(e.target.value)}
-            placeholder="Enter admin token for delete"
-            className="w-full rounded-xl border border-[#edb8d3] bg-white px-3 py-2 text-sm font-semibold text-[#5b2041] outline-none"
-          />
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-[#f3c7dd] bg-white shadow-[0_12px_24px_rgba(150,9,83,0.12)]">
