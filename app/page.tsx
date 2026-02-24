@@ -290,6 +290,11 @@ export default function Page() {
   const [lastNick, setLastNick] = useState<string | undefined>(undefined);
   const [myRank, setMyRank] = useState<number | undefined>(undefined);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackNotice, setFeedbackNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const savedNick = (localStorage.getItem("nickname") || "").trim();
@@ -800,6 +805,44 @@ export default function Page() {
     setPhase("home");
   };
 
+  const submitFeedback = async () => {
+    const message = feedbackText.trim();
+    if (message.length < 5) {
+      setFeedbackNotice("Please enter at least 5 characters.");
+      return;
+    }
+
+    setFeedbackLoading(true);
+    setFeedbackNotice(null);
+
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message,
+          nickname: (authNick ?? localStorage.getItem("nickname") ?? "").trim() || null,
+          store: selectedStore || null,
+          source: "home_tool",
+        }),
+      });
+
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setFeedbackNotice(json.error || "Failed to send feedback.");
+        return;
+      }
+
+      trackEvent({ action: "feedback_submit", category: "engagement" });
+      setFeedbackText("");
+      setFeedbackNotice("Thanks! Your feedback has been submitted.");
+    } catch {
+      setFeedbackNotice("Failed to send feedback.");
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
+
   return (
     <>
       <main className="fixed inset-0 overflow-auto bg-[radial-gradient(circle_at_15%_5%,#ffffff_0%,#ffeef8_35%,#f8d5e8_100%)] flex items-center justify-center p-4 md:p-6">
@@ -852,8 +895,8 @@ export default function Page() {
                 }}
                 onOpenLeaderboard={openLeaderboard}
                 onOpenAdmin={() => {
-                  trackEvent({ action: "admin_open_click", category: "engagement" });
-                  window.location.href = "/admin";
+                  trackEvent({ action: "tools_open_click", category: "engagement" });
+                  setToolsOpen(true);
                 }}
               />
             )}
@@ -962,6 +1005,93 @@ export default function Page() {
           )}
         </div>
       </main>
+
+      {toolsOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-[#2b0d1f]/45 backdrop-blur-[2px]"
+            onClick={() => setToolsOpen(false)}
+          />
+          <div className="relative w-full max-w-sm rounded-3xl border border-[var(--yl-card-border)] bg-white p-5 shadow-[0_24px_50px_rgba(150,9,83,0.28)]">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--yl-primary)]">Tools</p>
+            <h2 className="mt-1 text-2xl font-black text-[var(--yl-ink-strong)]">Admin / Feedback</h2>
+            <p className="mt-2 text-sm font-semibold text-[var(--yl-ink-muted)]">
+              Choose where to go.
+            </p>
+            <div className="mt-4 grid gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setToolsOpen(false);
+                  trackEvent({ action: "admin_open_click", category: "engagement" });
+                  window.location.href = "/admin";
+                }}
+                className="w-full rounded-xl bg-[var(--yl-primary)] px-4 py-3 text-sm font-black text-white transition hover:-translate-y-0.5"
+              >
+                Open Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setToolsOpen(false);
+                  setFeedbackNotice(null);
+                  setFeedbackOpen(true);
+                }}
+                className="w-full rounded-xl border border-[var(--yl-card-border)] bg-[var(--yl-card-bg)] px-4 py-3 text-sm font-black text-[var(--yl-primary)] transition hover:-translate-y-0.5"
+              >
+                Send Feedback
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {feedbackOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-[#2b0d1f]/45 backdrop-blur-[2px]"
+            onClick={() => setFeedbackOpen(false)}
+          />
+          <div className="relative w-full max-w-md rounded-3xl border border-[var(--yl-card-border)] bg-white p-5 shadow-[0_24px_50px_rgba(150,9,83,0.28)]">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--yl-primary)]">Feedback</p>
+            <h2 className="mt-1 text-2xl font-black text-[var(--yl-ink-strong)]">Tell us what to improve</h2>
+
+            <textarea
+              value={feedbackText}
+              onChange={(e) => {
+                setFeedbackText(e.target.value);
+                if (feedbackNotice) setFeedbackNotice(null);
+              }}
+              maxLength={600}
+              placeholder="Write your feedback here..."
+              className="mt-4 h-32 w-full resize-none rounded-xl border border-[var(--yl-card-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--yl-ink-strong)] outline-none focus:border-[var(--yl-primary)]"
+            />
+            <p className="mt-1 text-xs font-semibold text-[var(--yl-ink-muted)]">{feedbackText.length}/600</p>
+
+            {feedbackNotice ? (
+              <p className="mt-2 text-sm font-bold text-[var(--yl-primary-deep)]">{feedbackNotice}</p>
+            ) : null}
+
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={submitFeedback}
+                disabled={feedbackLoading}
+                className="flex-1 rounded-xl bg-[var(--yl-primary)] px-4 py-3 text-sm font-black text-white disabled:opacity-60"
+              >
+                {feedbackLoading ? "Sending..." : "Submit"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setFeedbackOpen(false)}
+                className="rounded-xl border border-[var(--yl-card-border)] bg-white px-4 py-3 text-sm font-black text-[var(--yl-ink-muted)]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <LeaderboardModal
         open={lbOpen}

@@ -92,8 +92,8 @@ export default function HomeScreen({
           <button
             type="button"
             onClick={onOpenAdmin}
-            aria-label="Open admin page"
-            title="Open admin page"
+            aria-label="Open admin and feedback menu"
+            title="Admin / Feedback"
             className="grid h-9 w-9 place-items-center rounded-full border border-[var(--yl-card-border)] bg-white text-base shadow-sm transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--yl-focus-ring)]"
           >
             🛠️
