@@ -17,6 +17,16 @@ type AdminRow = {
   store?: string | null;
 };
 
+type FeedbackRow = {
+  id?: number | string;
+  message?: string | null;
+  nickname?: string | null;
+  store?: string | null;
+  source?: string | null;
+  user_agent?: string | null;
+  created_at?: string | null;
+};
+
 function characterLabel(character?: CharId | null) {
   if (character === "green") return "Green";
   if (character === "berry") return "Berry";
@@ -33,7 +43,9 @@ function normalizeStoreName(raw?: string | null) {
 
 export default function AdminPage() {
   const [rows, setRows] = useState<AdminRow[]>([]);
+  const [feedbackRows, setFeedbackRows] = useState<FeedbackRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [isAuthed, setIsAuthed] = useState(false);
   const [password, setPassword] = useState("");
@@ -95,6 +107,50 @@ export default function AdminPage() {
     }
   };
 
+  const loadFeedbackRows = async () => {
+    const token = adminToken.trim();
+    if (!token) return;
+
+    setFeedbackLoading(true);
+    try {
+      const res = await fetch(`/api/admin/feedback?_ts=${Date.now()}`, {
+        method: "GET",
+        cache: "no-store",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const json = (await res.json()) as {
+        rows?: FeedbackRow[];
+        error?: string;
+        details?: string;
+      };
+
+      if (!res.ok) {
+        console.error("Admin feedback fetch error:", json);
+        if (res.status === 401) {
+          setIsAuthed(false);
+          setAuthError("Session expired. Please log in again.");
+        } else {
+          alert(
+            json.details
+              ? `${json.error || "Failed to load feedback."}\n${json.details}`
+              : (json.error || "Failed to load feedback."),
+          );
+        }
+        setFeedbackRows([]);
+      } else {
+        setFeedbackRows(json.rows ?? []);
+      }
+    } catch (err) {
+      console.error("Admin feedback fetch exception:", err);
+      alert("Failed to load feedback.");
+      setFeedbackRows([]);
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
+
   useEffect(() => {
     const boot = async () => {
       // Always require password entry on each admin page visit.
@@ -109,6 +165,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!isAuthed || !adminToken.trim()) return;
     void loadRows();
+    void loadFeedbackRows();
   }, [isAuthed, adminToken]);
 
   const filteredRows = useMemo(() => {
@@ -289,7 +346,10 @@ export default function AdminPage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => void loadRows()}
+              onClick={() => {
+                void loadRows();
+                void loadFeedbackRows();
+              }}
               className="rounded-full border border-[#f2bad5] bg-white px-4 py-2 text-sm font-black text-[#960953]"
             >
               Refresh
@@ -316,6 +376,45 @@ export default function AdminPage() {
             <p className="text-xs font-black uppercase tracking-[0.15em] text-[#8c4a6a]">Visible Rows</p>
             <p className="mt-1 text-2xl font-black text-[#4b0b31]">{filteredRows.length}</p>
           </div>
+        </div>
+
+        <div className="mb-4 overflow-hidden rounded-2xl border border-[#f3c7dd] bg-white shadow-[0_12px_24px_rgba(150,9,83,0.12)]">
+          <div className="bg-[linear-gradient(135deg,#fff1f8,#f8c8df)] px-4 py-3">
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#960953]">User Feedback</p>
+          </div>
+          <div className="grid grid-cols-[120px_1fr_130px_130px] bg-[#fff2f8] px-4 py-2 text-xs font-black text-[#8a5a75]">
+            <div>DATE</div>
+            <div>MESSAGE</div>
+            <div>NICKNAME</div>
+            <div>STORE</div>
+          </div>
+          {feedbackLoading ? (
+            <div className="px-4 py-6 text-sm font-semibold text-[#8b6178]">Loading feedback...</div>
+          ) : feedbackRows.length === 0 ? (
+            <div className="px-4 py-6 text-sm font-semibold text-[#8b6178]">No feedback yet.</div>
+          ) : (
+            <div className="max-h-72 overflow-auto">
+              {feedbackRows.map((row, idx) => (
+                <div
+                  key={`${row.id ?? "feedback"}-${idx}`}
+                  className="grid grid-cols-[120px_1fr_130px_130px] gap-3 border-t border-[#f9d7e8] px-4 py-3 text-sm"
+                >
+                  <div className="font-semibold text-[#6a3b58]">
+                    {row.created_at ? new Date(row.created_at).toLocaleString() : "-"}
+                  </div>
+                  <div className="font-semibold text-[#4e1434] break-words">
+                    {row.message?.trim() || "-"}
+                  </div>
+                  <div className="truncate font-semibold text-[#5f2b4b]">
+                    {row.nickname?.trim() || "-"}
+                  </div>
+                  <div className="truncate font-semibold text-[#5f2b4b]">
+                    {row.store?.trim() || "-"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="mb-4 overflow-hidden rounded-2xl border border-[#f3c7dd] bg-white shadow-[0_12px_24px_rgba(150,9,83,0.12)]">
