@@ -10,6 +10,7 @@ export default function StoreCombobox({
   placeholder = "Search store…",
   wrapperClassName = "",
   inputClassName = "",
+  disabled = false,
 }: {
   stores: string[];
   value: string;
@@ -17,6 +18,7 @@ export default function StoreCombobox({
   placeholder?: string;
   wrapperClassName?: string;
   inputClassName?: string;
+  disabled?: boolean;
 }) {
   const [query, setQuery] = useState(value);
   const [open, setOpen] = useState(false);
@@ -65,12 +67,15 @@ export default function StoreCombobox({
         value={query}
         autoComplete="off"
         placeholder={placeholder}
+        disabled={disabled}
         onChange={(e) => {
+          if (disabled) return;
           setQuery(e.target.value);
           updatePos();
           setOpen(true);
         }}
         onFocus={() => {
+          if (disabled) return;
           updatePos();
           setOpen(true);
         }}
