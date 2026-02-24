@@ -1,6 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   const adminToken = process.env.ADMIN_PANEL_TOKEN;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -68,8 +71,14 @@ export async function GET(req: NextRequest) {
   if (supportsStore && store && store !== "__ALL__") {
     const wanted = store.trim().toLowerCase();
     const filtered = rows.filter((r) => ((r.store ?? "").trim().toLowerCase() === wanted));
-    return NextResponse.json({ rows: filtered, supportsStore });
+    return NextResponse.json(
+      { rows: filtered, supportsStore },
+      { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } }
+    );
   }
 
-  return NextResponse.json({ rows, supportsStore });
+  return NextResponse.json(
+    { rows, supportsStore },
+    { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } }
+  );
 }

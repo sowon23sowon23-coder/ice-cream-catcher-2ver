@@ -61,8 +61,9 @@ export default function AdminPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/list", {
+      const res = await fetch(`/api/admin/list?_ts=${Date.now()}`, {
         method: "GET",
+        cache: "no-store",
         headers: {
           Authorization: `Bearer ${token}`,
         },
