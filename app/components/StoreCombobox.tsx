@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -7,7 +7,7 @@ export default function StoreCombobox({
   stores,
   value,
   onChange,
-  placeholder = "Search store…",
+  placeholder = "Search store...",
   wrapperClassName = "",
   inputClassName = "",
   disabled = false,
@@ -101,18 +101,14 @@ export default function StoreCombobox({
             className="max-h-52 overflow-auto rounded-xl border border-[#f3bdd8] bg-white shadow-lg"
           >
             {filtered.length === 0 ? (
-              <li className="px-3 py-2 text-sm font-semibold text-[#8d5b76]">
-                No matching stores.
-              </li>
+              <li className="px-3 py-2 text-sm font-semibold text-[#8d5b76]">No matching stores.</li>
             ) : (
               filtered.map((store) => (
                 <li
                   key={store}
                   onClick={() => handleSelect(store)}
                   className={`cursor-pointer px-3 py-2 text-sm font-semibold ${
-                    store === value
-                      ? "bg-[#fff1f8] text-[#960953]"
-                      : "text-[#4b0f31] hover:bg-[#fff4fb]"
+                    store === value ? "bg-[#fff1f8] text-[#960953]" : "text-[#4b0f31] hover:bg-[#fff4fb]"
                   }`}
                 >
                   {store}
