@@ -10,6 +10,7 @@ export default function LoginScreen({
   selectedStore,
   onStoreChange,
   onLogin,
+  onDeleteNickname,
   loading = false,
 }: {
   initialNickname?: string;
@@ -17,6 +18,7 @@ export default function LoginScreen({
   selectedStore: string;
   onStoreChange: (store: string) => void;
   onLogin: (nickname: string) => void;
+  onDeleteNickname?: () => void;
   loading?: boolean;
 }) {
   const [nickname, setNickname] = useState(initialNickname);
@@ -91,6 +93,15 @@ export default function LoginScreen({
     onLogin(trimmed);
   };
 
+  const clearNickname = () => {
+    setNickname("");
+    setNicknameError(null);
+    setStoreError(null);
+    setLockedStore(null);
+    lastCheckedNick.current = "";
+    onDeleteNickname?.();
+  };
+
   return (
     <main className="flex min-h-[70vh] items-center p-5">
       <div className="mx-auto w-full max-w-sm">
@@ -117,6 +128,15 @@ export default function LoginScreen({
             placeholder="2-12 characters"
             className="mt-1 w-full rounded-xl border border-[#f3bdd8] bg-[#fff9fc] px-3 py-2 text-sm font-semibold text-[#4b0f31] outline-none focus:border-[#960953]"
           />
+          {(nickname.trim().length > 0 || initialNickname.trim().length > 0) && (
+            <button
+              type="button"
+              onClick={clearNickname}
+              className="mt-2 text-xs font-black text-[#b23a67] underline underline-offset-4"
+            >
+              Delete saved nickname
+            </button>
+          )}
           {nicknameError ? <p className="mt-2 text-xs font-bold text-[#c13f63]">{nicknameError}</p> : null}
 
           <label htmlFor="login-store" className="mt-4 block text-xs font-black uppercase tracking-[0.14em] text-[#960953]">

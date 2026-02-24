@@ -823,6 +823,12 @@ export default function Page() {
                 selectedStore={selectedStore}
                 onStoreChange={setSelectedStore}
                 onLogin={onLogin}
+                onDeleteNickname={() => {
+                  localStorage.removeItem("nickname");
+                  setAuthNick(undefined);
+                  setLastNick(undefined);
+                  setBest(0);
+                }}
                 loading={loginLoading}
               />
             )}
