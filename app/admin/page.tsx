@@ -65,7 +65,7 @@ export default function AdminPage() {
           Authorization: `Bearer ${token}`,
         },
       });
-      const json = (await res.json()) as { rows?: AdminRow[]; supportsStore?: boolean; error?: string };
+      const json = (await res.json()) as { rows?: AdminRow[]; supportsStore?: boolean; error?: string; details?: string };
 
       if (!res.ok) {
         console.error("Admin leaderboard fetch error:", json);
@@ -74,7 +74,7 @@ export default function AdminPage() {
           setIsAuthed(false);
           setAuthError("세션이 만료되었어요. 다시 로그인해 주세요.");
         } else {
-          alert(json.error || "Failed to load leaderboard records.");
+          alert(json.details ? `${json.error || "Failed to load leaderboard records."}\n${json.details}` : (json.error || "Failed to load leaderboard records."));
         }
         setRows([]);
       } else {

@@ -22,12 +22,15 @@ export async function GET(req: NextRequest) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const buildQuery = (selectColumns: string, supportsStoreFilter: boolean) => {
+  const buildQuery = (selectColumns: string, supportsStoreFilter: boolean, withUpdatedAtOrder: boolean) => {
     let query = adminSupabase
       .from("leaderboard_best_v2")
       .select(selectColumns)
-      .order("updated_at", { ascending: false })
       .limit(5000);
+
+    if (withUpdatedAtOrder) {
+      query = query.order("updated_at", { ascending: false });
+    }
 
     if (supportsStoreFilter && store && store !== "__ALL__") {
       query = query.eq("store", store);
@@ -37,10 +40,13 @@ export async function GET(req: NextRequest) {
   };
 
   const attempts = [
-    { run: () => buildQuery("nickname_key,nickname_display,score,updated_at,character,store", true), hasStore: true },
-    { run: () => buildQuery("nickname_key,nickname_display,score,updated_at,store", true), hasStore: true },
-    { run: () => buildQuery("nickname_key,nickname_display,score,updated_at,character", false), hasStore: false },
-    { run: () => buildQuery("nickname_key,nickname_display,score,updated_at", false), hasStore: false },
+    { run: () => buildQuery("nickname_key,nickname_display,score,updated_at,character,store", true, true), hasStore: true },
+    { run: () => buildQuery("nickname_key,nickname_display,score,updated_at,store", true, true), hasStore: true },
+    { run: () => buildQuery("nickname_key,nickname_display,score,updated_at,character", false, true), hasStore: false },
+    { run: () => buildQuery("nickname_key,nickname_display,score,updated_at", false, true), hasStore: false },
+    { run: () => buildQuery("nickname_key,nickname_display,score,store,character", true, false), hasStore: true },
+    { run: () => buildQuery("nickname_key,nickname_display,score", false, false), hasStore: false },
+    { run: () => buildQuery("*", false, false), hasStore: false },
   ];
 
   let data: any[] | null = null;
