@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { STORE_OPTIONS } from "../lib/stores";
-import { supabase } from "../lib/supabaseClient";
 
 type CharId = "green" | "berry" | "sprinkle";
 
@@ -43,24 +42,36 @@ export default function AdminPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password: rawPassword }),
     });
-    return res.ok;
+    const json = (await res.json().catch(() => ({}))) as { error?: string };
+    return { ok: res.ok, error: json.error };
   };
 
   const loadRows = async () => {
+    const token = adminToken.trim();
+    if (!token) return;
+
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("leaderboard_best_v2")
-        .select("nickname_key,nickname_display,score,updated_at,character,store")
-        .order("updated_at", { ascending: false })
-        .limit(500);
+      const res = await fetch("/api/admin/list", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const json = (await res.json()) as { rows?: AdminRow[]; error?: string };
 
-      if (error) {
-        console.error("Admin leaderboard fetch error:", error);
-        alert("Failed to load leaderboard records.");
+      if (!res.ok) {
+        console.error("Admin leaderboard fetch error:", json);
+        if (res.status === 401) {
+          sessionStorage.removeItem("adminPanelToken");
+          setIsAuthed(false);
+          setAuthError("세션이 만료되었어요. 다시 로그인해 주세요.");
+        } else {
+          alert(json.error || "Failed to load leaderboard records.");
+        }
         setRows([]);
       } else {
-        setRows((data as AdminRow[] | null) ?? []);
+        setRows(json.rows ?? []);
       }
     } catch (err) {
       console.error("Admin leaderboard fetch exception:", err);
@@ -80,8 +91,8 @@ export default function AdminPage() {
       }
 
       try {
-        const ok = await verifyAdminPassword(saved);
-        if (ok) {
+        const result = await verifyAdminPassword(saved);
+        if (result.ok) {
           setAdminToken(saved);
           setIsAuthed(true);
         } else {
@@ -99,9 +110,9 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthed) return;
+    if (!isAuthed || !adminToken.trim()) return;
     void loadRows();
-  }, [isAuthed]);
+  }, [isAuthed, adminToken]);
 
   const filteredRows = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -174,9 +185,9 @@ export default function AdminPage() {
 
     setAuthLoading(true);
     try {
-      const ok = await verifyAdminPassword(trimmed);
-      if (!ok) {
-        setAuthError("Invalid password.");
+      const result = await verifyAdminPassword(trimmed);
+      if (!result.ok) {
+        setAuthError(result.error || "Invalid password.");
         setAuthLoading(false);
         return;
       }
