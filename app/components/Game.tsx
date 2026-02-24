@@ -313,7 +313,6 @@ export default function Game({
         leaderboardOpenedRef.current = true;
         playSfx("fanfare");
         vibrateByEvent("fanfare");
-        setShareNotice("New Best! Opening leaderboard...");
         window.setTimeout(() => {
           onGameOver?.(score);
         }, 650);
