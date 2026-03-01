@@ -969,9 +969,7 @@ export default function Game({
           className={`relative ${
             mode === "mission"
               ? "aspect-[3/4] sm:aspect-[9/16]"
-              : mode === "free"
-                ? "aspect-[4/5] sm:aspect-[9/16]"
-                : "aspect-[9/16]"
+              : "aspect-[9/16]"
           } rounded-3xl overflow-hidden shadow-xl ring-1 ring-white/50 touch-none ${
             shake ? "animate-shake" : ""
           }`}
