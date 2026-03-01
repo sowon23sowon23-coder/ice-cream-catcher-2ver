@@ -937,24 +937,24 @@ export default function Game({
         )}
 
         {mode === "mission" && missionTargets.length > 0 && (
-          <div className="mb-3 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-2 text-center text-sm font-bold text-amber-900">
-            <p className="text-xs font-black uppercase tracking-[0.12em] text-amber-800">
+          <div className="mb-2 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-center text-xs font-bold text-amber-900 sm:mb-3 sm:rounded-2xl sm:px-4 sm:py-2 sm:text-sm">
+            <p className="text-[10px] font-black uppercase tracking-[0.1em] text-amber-800 sm:text-xs sm:tracking-[0.12em]">
               Mission Progress: {Math.min(score, MISSION_GOAL_SCORE)}/{MISSION_GOAL_SCORE}
             </p>
-            <div className="mx-auto mt-2 h-2 w-full max-w-[220px] overflow-hidden rounded-full bg-amber-100 ring-1 ring-amber-200">
+            <div className="mx-auto mt-1 h-1.5 w-full max-w-[180px] overflow-hidden rounded-full bg-amber-100 ring-1 ring-amber-200 sm:mt-2 sm:h-2 sm:max-w-[220px]">
               <div
                 className="h-full rounded-full bg-amber-500 transition-all duration-300"
                 style={{ width: `${(Math.min(score, MISSION_GOAL_SCORE) / MISSION_GOAL_SCORE) * 100}%` }}
               />
             </div>
-            <p>Catch only:</p>
-            <div className="mt-2 flex items-center justify-center gap-2">
+            <p className="mt-1 text-[11px] sm:text-sm">Catch only:</p>
+            <div className="mt-1 flex items-center justify-center gap-1.5 sm:mt-2 sm:gap-2">
               {missionTargets.map((target) => (
                 <img
                   key={target}
                   src={`/${target}`}
                   alt={target}
-                  className="h-7 w-7 object-contain"
+                  className="h-5 w-5 object-contain sm:h-7 sm:w-7"
                   draggable={false}
                   style={{ transform: `scale(${imageScaleBoost(target)})` }}
                 />
