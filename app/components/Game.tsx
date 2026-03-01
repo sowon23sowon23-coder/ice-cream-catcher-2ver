@@ -807,7 +807,7 @@ export default function Game({
   }, [phase, mode, missionSet, fallingItemImages]);
 
   return (
-    <main className="h-full min-h-full bg-gradient-to-b from-pink-100 to-blue-100 flex items-center justify-center p-4">
+    <main className="h-full min-h-full bg-gradient-to-b from-pink-100 to-blue-100 flex items-center justify-center p-2 sm:p-4">
       <style jsx global>{`
         @keyframes shake {
           0% {
@@ -876,7 +876,7 @@ export default function Game({
         }
       `}</style>
 
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-[430px]">
         <div className="mb-3 flex gap-2">
           {/* Score */}
           <div className={`flex flex-col items-center rounded-2xl py-2 shadow ${mode === "timeAttack" ? "flex-[2] bg-[var(--yl-primary)]" : "flex-1 bg-white/90 ring-1 ring-[var(--yl-card-border)]"}`}>
@@ -966,7 +966,7 @@ export default function Game({
         <div
           ref={areaRef}
           onMouseMove={(e) => phase === "play" && move(e.clientX)}
-          className={`relative aspect-[3/4] rounded-3xl overflow-hidden shadow-xl ring-1 ring-white/50 touch-none ${
+          className={`relative aspect-[9/16] rounded-3xl overflow-hidden shadow-xl ring-1 ring-white/50 touch-none ${
             shake ? "animate-shake" : ""
           }`}
           style={{

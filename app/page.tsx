@@ -845,20 +845,20 @@ export default function Page() {
 
   return (
     <>
-      <main className="fixed inset-0 overflow-auto bg-[radial-gradient(circle_at_15%_5%,#ffffff_0%,#ffeef8_35%,#f8d5e8_100%)] flex items-center justify-center p-4 md:p-6">
+      <main className="fixed inset-0 overflow-auto bg-[radial-gradient(circle_at_15%_5%,#ffffff_0%,#ffeef8_35%,#f8d5e8_100%)] flex items-center justify-center p-1 sm:p-3 md:p-6">
         <div
           className={`flex w-full items-center ${
             phase === "home"
               ? "max-w-[980px] gap-4 lg:justify-center"
-              : "max-w-[390px] justify-center"
+              : "max-w-[430px] justify-center"
           }`}
         >
           <div
-            className={`relative w-full max-w-[390px] overflow-hidden rounded-[2rem] ${
+            className={`relative w-full overflow-hidden rounded-[2rem] ${
               phase === "login"
                 ? ""
                 : "bg-white/95 shadow-[0_22px_60px_rgba(150,9,83,0.28)] ring-1 ring-[var(--yl-card-border)]"
-            }`}
+            } ${phase === "home" ? "max-w-[390px]" : "max-w-[430px]"}`}
             style={{
               width: "100%",
               height: phase === "home" ? "min(844px, calc(100dvh - 2rem))" : "auto",
