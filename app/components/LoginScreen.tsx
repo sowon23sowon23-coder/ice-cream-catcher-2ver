@@ -85,7 +85,8 @@ export default function LoginScreen({
       return;
     }
 
-    if (verifiedContact.current !== normalized) {
+    // Save contact to DB in the background — does NOT block login
+    void (async () => {
       try {
         const insertRes = await supabase
           .from("entries")
@@ -94,7 +95,6 @@ export default function LoginScreen({
           .single();
 
         let entryId: number | null = null;
-
         if (!insertRes.error && insertRes.data) {
           entryId = Number(insertRes.data.id);
         } else if (insertRes.error?.code === "23505") {
@@ -105,20 +105,12 @@ export default function LoginScreen({
             .eq("contact_value", normalized)
             .single();
           if (existing.data) entryId = Number(existing.data.id);
-        } else if (insertRes.error) {
-          setContactError(insertRes.error.message);
-          return;
         }
-
-        if (entryId) {
-          setEntryCode(formatEntryCode(entryId));
-          verifiedContact.current = normalized;
-        }
-      } catch (e) {
-        setContactError(e instanceof Error ? e.message : "Failed to save contact.");
-        return;
+        if (entryId) setEntryCode(formatEntryCode(entryId));
+      } catch {
+        // fail silently — login still proceeds
       }
-    }
+    })();
 
     await onLogin(trimmed);
   };
