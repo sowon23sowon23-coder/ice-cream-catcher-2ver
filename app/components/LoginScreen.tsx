@@ -42,6 +42,7 @@ export default function LoginScreen({
   const [contactConsent, setContactConsent] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
   const [entryCode, setEntryCode] = useState<string | null>(null);
+  const verifiedContact = useRef<string>("");
 
   useEffect(() => {
     setNickname(initialNickname);
@@ -80,27 +81,31 @@ export default function LoginScreen({
       return;
     }
 
-    try {
-      const res = await fetch("/api/entry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contactType,
-          contactValue: getContactValue(),
-          consent: true,
-        }),
-      });
+    const contactValue = getContactValue();
+    if (verifiedContact.current !== contactValue) {
+      try {
+        const res = await fetch("/api/entry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contactType,
+            contactValue,
+            consent: true,
+          }),
+        });
 
-      const json = (await res.json()) as Partial<EntryResponse> & { error?: string };
-      if (!res.ok) {
-        setContactError(json.error || "Failed to verify phone/email.");
+        const json = (await res.json()) as Partial<EntryResponse> & { error?: string };
+        if (!res.ok) {
+          setContactError(json.error || "Failed to verify phone/email.");
+          return;
+        }
+
+        setEntryCode(json.entryCode ?? null);
+        verifiedContact.current = contactValue;
+      } catch {
+        setContactError("Network error while checking phone/email.");
         return;
       }
-
-      setEntryCode(json.entryCode ?? null);
-    } catch {
-      setContactError("Network error while checking phone/email.");
-      return;
     }
 
     await onLogin(trimmed);

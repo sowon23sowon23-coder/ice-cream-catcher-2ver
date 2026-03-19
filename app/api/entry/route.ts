@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   const limit = await supabase.rpc("check_rate_limit", {
     p_key: `entry:${ip}`,
-    p_limit: 3,
+    p_limit: 20,
     p_window_seconds: 60,
   });
 
