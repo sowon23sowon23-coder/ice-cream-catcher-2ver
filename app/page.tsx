@@ -892,19 +892,19 @@ export default function Page() {
                     ? writeLocalTodayBest(nick || "guest", normalizedStore, finalScore)
                     : readLocalTodayBest(nick || "guest", normalizedStore);
 
-                  setLbOpen(true);
-                  setLbLoading(true);
-                  setMode(leaderboardMode);
                   setSelectedStore(normalizedStore);
                   localStorage.setItem("selectedStore", normalizedStore);
                   setLastNick(nick || "YOU");
                   setLastScore(todayBestLocal);
 
                   if (!isFreePlay) {
-                    setMyRank(undefined);
-                    await fetchTop20(leaderboardMode);
+                    setPhase("home");
                     return;
                   }
+
+                  setLbOpen(true);
+                  setLbLoading(true);
+                  setMode(leaderboardMode);
 
                   writeLocalAllTimeBest(nick || "guest", normalizedStore, finalScore);
 
