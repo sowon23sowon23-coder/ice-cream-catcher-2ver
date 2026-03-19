@@ -48,6 +48,8 @@ const MISSION_GOAL_SCORE = 10;
 const CATCH_HALF_WIDTH_PCT = 9.5;
 const CATCH_Y_START_PCT = 84;
 const MISS_Y_PCT = 101;
+const MAX_LIVES = 5;
+const HEART_SPAWN_CHANCE = 0.10; // 10% per spawn interval in free mode
 const TIME_ATTACK_CREAM_ZONES: CreamZone[] = [
   { minX: 44, maxX: 56, minY: 10, maxY: 20 },
   { minX: 33, maxX: 66, minY: 20, maxY: 30 },
@@ -667,7 +669,11 @@ export default function Game({
     spawnRef.current = window.setInterval(() => {
       let itemData: { emoji?: string; image?: string };
       const randomImage = fallingItemImages[Math.floor(Math.random() * fallingItemImages.length)] ?? "gummy-bear.png";
-      itemData = { image: randomImage };
+      if (mode === "free" && Math.random() < HEART_SPAWN_CHANCE) {
+        itemData = { emoji: "❤️" };
+      } else {
+        itemData = { image: randomImage };
+      }
       const currentScore = scoreRef.current;
       const spawnCount = mode === "free" ? freeSpawnBurstCount(currentScore) : 1;
       const nextItems: FallingItem[] = [];
@@ -696,6 +702,7 @@ export default function Game({
       setItems((prev) => {
         let gained = 0;
         let lifeLoss = 0;
+        let gainLife = 0;
         const popsToAdd: Pop[] = [];
         const next: FallingItem[] = [];
         let lifeLossReason: { x: number; text: string } | null = null;
@@ -728,6 +735,17 @@ export default function Game({
                 lifeLoss += 1;
                 if (!lifeLossReason) lifeLossReason = { x: item.x, text: "WRONG" };
               }
+            } else if (item.emoji === "❤️") {
+              // Heart item — gain a life
+              gainLife += 1;
+              popsToAdd.push({
+                id: popIdRef.current++,
+                x: item.x,
+                y: 88,
+                text: "+❤️",
+                born: now,
+                kind: "gain",
+              });
             } else {
               gained += 1;
               popsToAdd.push({
@@ -762,7 +780,7 @@ export default function Game({
                 if (!lifeLossReason) lifeLossReason = { x: item.x, text: "MISSED" };
               }
             } else {
-              if (mode !== "timeAttack") {
+              if (mode !== "timeAttack" && item.emoji !== "❤️") {
                 lifeLoss += 1;
                 if (!lifeLossReason) lifeLossReason = { x: item.x, text: "MISSED" };
               }
@@ -771,6 +789,12 @@ export default function Game({
           }
 
           next.push({ ...item, y: ny });
+        }
+
+        if (gainLife) {
+          setLives((l) => Math.min(l + gainLife, MAX_LIVES));
+          playSfx("catch");
+          vibrateByEvent("catch");
         }
 
         if (gained) {
@@ -904,7 +928,7 @@ export default function Game({
             <div className="flex flex-1 flex-col items-center rounded-2xl bg-white/90 py-2 shadow ring-1 ring-[var(--yl-card-border)]">
               <span className="text-xs font-black uppercase tracking-[0.14em] text-[var(--yl-primary)]">LIVES</span>
               <div className="mt-0.5 flex gap-0.5">
-                {Array.from({ length: 3 }).map((_, i) => (
+                {Array.from({ length: Math.max(3, lives) }).map((_, i) => (
                   <span key={i} className="text-lg leading-none">{i < lives ? "❤️" : "🤍"}</span>
                 ))}
               </div>
