@@ -1,15 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { formatEntryCode, normalizeEmail, normalizeUsPhone } from "../lib/entry";
 
 type ContactType = "phone" | "email";
-
-type EntryResponse = {
-  entryId: number;
-  entryCode: string;
-  isNew: boolean;
-  error?: string;
-};
 
 const EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com", "aol.com"];
 
@@ -81,29 +76,46 @@ export default function LoginScreen({
       return;
     }
 
-    const contactValue = getContactValue();
-    if (verifiedContact.current !== contactValue) {
-      try {
-        const res = await fetch("/api/entry", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contactType,
-            contactValue,
-            consent: true,
-          }),
-        });
+    const rawContact = getContactValue();
+    const normalized =
+      contactType === "phone" ? normalizeUsPhone(rawContact) : normalizeEmail(rawContact);
 
-        const json = (await res.json()) as Partial<EntryResponse> & { error?: string };
-        if (!res.ok) {
-          setContactError(json.error || "Failed to verify phone/email.");
+    if (!normalized) {
+      setContactError(contactType === "phone" ? "Invalid phone number format." : "Invalid email format.");
+      return;
+    }
+
+    if (verifiedContact.current !== normalized) {
+      try {
+        const insertRes = await supabase
+          .from("entries")
+          .insert([{ contact_type: contactType, contact_value: normalized, consent_at: new Date().toISOString() }])
+          .select("id")
+          .single();
+
+        let entryId: number | null = null;
+
+        if (!insertRes.error && insertRes.data) {
+          entryId = Number(insertRes.data.id);
+        } else if (insertRes.error?.code === "23505") {
+          const existing = await supabase
+            .from("entries")
+            .select("id")
+            .eq("contact_type", contactType)
+            .eq("contact_value", normalized)
+            .single();
+          if (existing.data) entryId = Number(existing.data.id);
+        } else if (insertRes.error) {
+          setContactError(insertRes.error.message);
           return;
         }
 
-        setEntryCode(json.entryCode ?? null);
-        verifiedContact.current = contactValue;
+        if (entryId) {
+          setEntryCode(formatEntryCode(entryId));
+          verifiedContact.current = normalized;
+        }
       } catch (e) {
-        setContactError(e instanceof Error ? e.message : "Network error. Please try again.");
+        setContactError(e instanceof Error ? e.message : "Failed to save contact.");
         return;
       }
     }
