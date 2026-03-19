@@ -301,6 +301,7 @@ export default function Page() {
   useEffect(() => {
     const savedNick = (localStorage.getItem("nickname") || "").trim();
     const savedStore = (localStorage.getItem("selectedStore") || "").trim();
+    const contactVerified = localStorage.getItem("contactVerified") === "1";
     if (savedNick.length >= 2 && savedNick.length <= 12) {
       setAuthNick(savedNick);
     } else {
@@ -309,7 +310,12 @@ export default function Page() {
     if (savedStore && STORE_OPTIONS.includes(savedStore)) {
       setSelectedStore(savedStore);
     }
-    setPhase("login");
+    // Skip login if already verified on this device
+    if (savedNick.length >= 2 && savedNick.length <= 12 && contactVerified) {
+      setPhase("home");
+    } else {
+      setPhase("login");
+    }
   }, []);
 
   useEffect(() => {
@@ -755,6 +761,7 @@ export default function Page() {
     setBest(myLocalBest);
 
     localStorage.setItem("nickname", trimmed);
+    localStorage.setItem("contactVerified", "1");
     setAuthNick(trimmed);
     setLastNick(trimmed);
     setLoginLoading(false);
@@ -831,6 +838,7 @@ export default function Page() {
                 onLogin={onLogin}
                 onDeleteNickname={() => {
                   localStorage.removeItem("nickname");
+                  localStorage.removeItem("contactVerified");
                   setAuthNick(undefined);
                   setLastNick(undefined);
                   setBest(0);
