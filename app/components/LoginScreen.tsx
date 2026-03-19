@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type ContactType = "phone" | "email";
 
@@ -10,6 +10,8 @@ type EntryResponse = {
   isNew: boolean;
   error?: string;
 };
+
+const EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com", "aol.com"];
 
 export default function LoginScreen({
   initialNickname = "",
@@ -25,7 +27,18 @@ export default function LoginScreen({
   const [nickname, setNickname] = useState(initialNickname);
   const [nicknameError, setNicknameError] = useState<string | null>(null);
   const [contactType, setContactType] = useState<ContactType>("phone");
-  const [contactValue, setContactValue] = useState("");
+
+  // Phone fields
+  const [phoneArea, setPhoneArea] = useState("");
+  const [phoneMid, setPhoneMid] = useState("");
+  const [phoneLast, setPhoneLast] = useState("");
+  const phoneMidRef = useRef<HTMLInputElement>(null);
+  const phoneLastRef = useRef<HTMLInputElement>(null);
+
+  // Email fields
+  const [emailLocal, setEmailLocal] = useState("");
+  const [emailDomain, setEmailDomain] = useState(EMAIL_DOMAINS[0]);
+
   const [contactConsent, setContactConsent] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
   const [entryCode, setEntryCode] = useState<string | null>(null);
@@ -33,6 +46,20 @@ export default function LoginScreen({
   useEffect(() => {
     setNickname(initialNickname);
   }, [initialNickname]);
+
+  const getContactValue = () => {
+    if (contactType === "phone") {
+      return `+1${phoneArea}${phoneMid}${phoneLast}`;
+    }
+    return `${emailLocal.trim()}@${emailDomain}`;
+  };
+
+  const isContactFilled = () => {
+    if (contactType === "phone") {
+      return phoneArea.length === 3 && phoneMid.length === 3 && phoneLast.length === 4;
+    }
+    return emailLocal.trim().length > 0;
+  };
 
   const submit = async () => {
     const trimmed = nickname.trim();
@@ -44,8 +71,8 @@ export default function LoginScreen({
     setNicknameError(null);
     setContactError(null);
 
-    if (!contactValue.trim()) {
-      setContactError(contactType === "phone" ? "Enter a US phone number." : "Enter an email address.");
+    if (!isContactFilled()) {
+      setContactError(contactType === "phone" ? "Enter a complete US phone number." : "Enter your email address.");
       return;
     }
     if (!contactConsent) {
@@ -59,7 +86,7 @@ export default function LoginScreen({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contactType,
-          contactValue,
+          contactValue: getContactValue(),
           consent: true,
         }),
       });
@@ -84,6 +111,9 @@ export default function LoginScreen({
     setNicknameError(null);
     onDeleteNickname?.();
   };
+
+  const inputClass =
+    "rounded-xl border border-[var(--yl-card-border)] bg-white px-3 py-2 text-base font-semibold text-[var(--yl-ink-strong)] outline-none focus:border-[var(--yl-primary)] text-center";
 
   return (
     <main className="flex min-h-[70vh] items-center p-5">
@@ -156,17 +186,90 @@ export default function LoginScreen({
               </button>
             </div>
 
-            <input
-              value={contactValue}
-              onChange={(e) => {
-                setContactValue(e.target.value);
-                if (contactError) setContactError(null);
-              }}
-              placeholder={contactType === "phone" ? "e.g. (555) 123-4567" : "e.g. you@example.com"}
-              inputMode={contactType === "phone" ? "tel" : "email"}
-              autoComplete={contactType === "phone" ? "tel" : "email"}
-              className="mt-3 w-full rounded-xl border border-[var(--yl-card-border)] bg-white px-3 py-2 text-base font-semibold text-[var(--yl-ink-strong)] outline-none focus:border-[var(--yl-primary)]"
-            />
+            {contactType === "phone" ? (
+              <div className="mt-3 flex items-center gap-1.5">
+                <span className="text-sm font-bold text-[var(--yl-ink-muted)]">+1</span>
+                <input
+                  value={phoneArea}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 3);
+                    setPhoneArea(v);
+                    if (contactError) setContactError(null);
+                    if (v.length === 3) phoneMidRef.current?.focus();
+                  }}
+                  inputMode="numeric"
+                  maxLength={3}
+                  placeholder="XXX"
+                  className={`${inputClass} w-16`}
+                />
+                <span className="text-sm font-bold text-[var(--yl-ink-muted)]">–</span>
+                <input
+                  ref={phoneMidRef}
+                  value={phoneMid}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 3);
+                    setPhoneMid(v);
+                    if (contactError) setContactError(null);
+                    if (v.length === 3) phoneLastRef.current?.focus();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Backspace" && phoneMid === "") {
+                      setPhoneArea((prev) => prev.slice(0, -1));
+                    }
+                  }}
+                  inputMode="numeric"
+                  maxLength={3}
+                  placeholder="XXX"
+                  className={`${inputClass} w-16`}
+                />
+                <span className="text-sm font-bold text-[var(--yl-ink-muted)]">–</span>
+                <input
+                  ref={phoneLastRef}
+                  value={phoneLast}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                    setPhoneLast(v);
+                    if (contactError) setContactError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Backspace" && phoneLast === "") {
+                      setPhoneMid((prev) => prev.slice(0, -1));
+                      phoneMidRef.current?.focus();
+                    }
+                  }}
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="XXXX"
+                  className={`${inputClass} w-20`}
+                />
+              </div>
+            ) : (
+              <div className="mt-3 flex items-center gap-1.5">
+                <input
+                  value={emailLocal}
+                  onChange={(e) => {
+                    setEmailLocal(e.target.value);
+                    if (contactError) setContactError(null);
+                  }}
+                  placeholder="yourname"
+                  autoComplete="email"
+                  className="min-w-0 flex-1 rounded-xl border border-[var(--yl-card-border)] bg-white px-3 py-2 text-base font-semibold text-[var(--yl-ink-strong)] outline-none focus:border-[var(--yl-primary)]"
+                />
+                <span className="text-sm font-bold text-[var(--yl-ink-muted)]">@</span>
+                <select
+                  value={emailDomain}
+                  onChange={(e) => {
+                    setEmailDomain(e.target.value);
+                    if (contactError) setContactError(null);
+                  }}
+                  className="rounded-xl border border-[var(--yl-card-border)] bg-white px-2 py-2 text-sm font-semibold text-[var(--yl-ink-strong)] outline-none focus:border-[var(--yl-primary)]"
+                >
+                  {EMAIL_DOMAINS.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <label className="mt-3 flex items-start gap-2 rounded-xl border border-[var(--yl-card-border)] bg-white p-3 text-sm">
               <input
