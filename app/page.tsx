@@ -636,10 +636,7 @@ export default function Page() {
       }
 
       if (error) {
-        console.error(error);
-        if (!silent) {
-          alert("Failed to save score.");
-        }
+        console.error("Failed to save score:", error);
         return undefined;
       }
     }
