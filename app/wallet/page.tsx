@@ -53,7 +53,7 @@ function WalletPageContent() {
           .order("issued_at", { ascending: false });
 
         if (error) {
-          setError("지갑을 불러오지 못했습니다.");
+          setError(`오류: ${error.message} (code: ${error.code})`);
           return;
         }
         setCoupons(
@@ -68,8 +68,8 @@ function WalletPageContent() {
             redeemedAt: c.redeemed_at,
           }))
         );
-      } catch {
-        setError("지갑을 불러오지 못했습니다.");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Network error");
       } finally {
         setLoading(false);
       }
