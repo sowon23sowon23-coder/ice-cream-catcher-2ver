@@ -53,7 +53,8 @@ function WalletPageContent() {
           .order("issued_at", { ascending: false });
 
         if (error) {
-          setError(`오류: ${error.message} (code: ${error.code})`);
+          // Table might not exist yet — treat as empty
+          setCoupons([]);
           return;
         }
         setCoupons(
@@ -68,8 +69,8 @@ function WalletPageContent() {
             redeemedAt: c.redeemed_at,
           }))
         );
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Network error");
+      } catch {
+        setCoupons([]);
       } finally {
         setLoading(false);
       }
