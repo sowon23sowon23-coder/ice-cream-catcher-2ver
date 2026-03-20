@@ -313,10 +313,12 @@ export default function Game({
     }
 
     if (mode === "free") {
-      if (isNewBest && !leaderboardOpenedRef.current) {
+      if (!leaderboardOpenedRef.current) {
         leaderboardOpenedRef.current = true;
-        playSfx("fanfare");
-        vibrateByEvent("fanfare");
+        if (isNewBest) {
+          playSfx("fanfare");
+          vibrateByEvent("fanfare");
+        }
         window.setTimeout(() => {
           onGameOver?.(score);
         }, 650);
