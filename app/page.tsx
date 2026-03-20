@@ -297,6 +297,7 @@ export default function Page() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackNotice, setFeedbackNotice] = useState<string | null>(null);
   const [earnedCouponCode, setEarnedCouponCode] = useState<string | null>(null);
+  const [couponDebugError, setCouponDebugError] = useState<string | null>(null);
 
   useEffect(() => {
     const savedNick = (localStorage.getItem("nickname") || "").trim();
@@ -922,13 +923,21 @@ export default function Page() {
                         }
                         if (couponCode) {
                           setEarnedCouponCode(couponCode);
+                          setCouponDebugError(null);
                         } else {
-                          console.error("Coupon issuance failed after all attempts. Last error:", lastError);
+                          const errMsg = lastError ? JSON.stringify(lastError) : "unknown error";
+                          console.error("Coupon issuance failed. Last error:", errMsg);
+                          setCouponDebugError(errMsg);
                         }
+                      } else {
+                        setCouponDebugError(`No tier for score ${finalScore}`);
                       }
                     } catch (e) {
                       console.error("Coupon issue error:", e);
+                      setCouponDebugError(String(e));
                     }
+                  } else {
+                    setCouponDebugError(`Skip: score=${finalScore} MIN=${MIN_SCORE_FOR_COUPON} isFreePlay=${isFreePlay}`);
                   }
 
                   if (nick.length >= 2 && nick.length <= 12) {
@@ -1041,6 +1050,17 @@ export default function Page() {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Coupon debug error (temporary) */}
+      {couponDebugError && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[300] w-full max-w-sm px-4">
+          <div className="bg-red-600 text-white rounded-2xl shadow-2xl p-3">
+            <p className="font-black text-xs">쿠폰 에러 (디버그):</p>
+            <p className="text-white/90 text-xs break-all mt-1">{couponDebugError}</p>
+            <button onClick={() => setCouponDebugError(null)} className="mt-2 text-white/70 text-xs underline">닫기</button>
           </div>
         </div>
       )}
