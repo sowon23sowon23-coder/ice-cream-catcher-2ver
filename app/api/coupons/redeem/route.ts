@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServerClient, verifyStaffToken } from "@/app/lib/supabaseServer";
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 const RedeemSchema = z.object({
   code: z.string().min(1).max(20),
   storeId: z.string().min(1).max(100),
@@ -17,7 +27,7 @@ const REASON_MESSAGES: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   if (!verifyStaffToken(req.headers.get("authorization"))) {
-    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401, headers: CORS_HEADERS });
   }
 
   try {
@@ -27,7 +37,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { success: false, reason: "잘못된 요청입니다.", details: parsed.error.flatten() },
-        { status: 400 }
+        { status: 400, headers: CORS_HEADERS }
       );
     }
 
@@ -47,7 +57,7 @@ export async function POST(req: NextRequest) {
       console.error("[coupons/redeem] RPC error:", error);
       return NextResponse.json(
         { success: false, reason: "서버 오류가 발생했습니다." },
-        { status: 500 }
+        { status: 500, headers: CORS_HEADERS }
       );
     }
 
@@ -70,7 +80,7 @@ export async function POST(req: NextRequest) {
             REASON_MESSAGES[result.reason ?? ""] ||
             "사용할 수 없는 쿠폰입니다.",
         },
-        { status: 409 }
+        { status: 409, headers: CORS_HEADERS }
       );
     }
 
@@ -85,12 +95,12 @@ export async function POST(req: NextRequest) {
       storeId,
       staffId,
       orderNumber: orderNumber ?? null,
-    });
+    }, { headers: CORS_HEADERS });
   } catch (err) {
     console.error("[coupons/redeem] Unexpected error:", err);
     return NextResponse.json(
       { success: false, reason: "서버 오류가 발생했습니다." },
-      { status: 500 }
+      { status: 500, headers: CORS_HEADERS }
     );
   }
 }

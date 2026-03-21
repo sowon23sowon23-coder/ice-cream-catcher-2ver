@@ -30,12 +30,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      (process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000");
-
     return NextResponse.json({
       coupon: {
         id: coupon.id,
@@ -47,7 +41,7 @@ export async function GET(req: NextRequest) {
         expiresAt: coupon.expires_at,
         redeemedAt: coupon.redeemed_at,
       },
-      qrPayload: `${baseUrl}/redeem?code=${coupon.code}`,
+      qrPayload: coupon.code,
     });
   } catch (err) {
     console.error("[coupons/info] Unexpected error:", err);
