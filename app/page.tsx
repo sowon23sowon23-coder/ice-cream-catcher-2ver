@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { trackEvent } from "./lib/gtag";
-import { MIN_SCORE_FOR_COUPON, getScoreTier, getExpiresAt, generateCouponCodeClient } from "./lib/couponUtils";
+import { MIN_SCORE_FOR_COUPON } from "./lib/couponUtils";
 import LoginScreen from "./components/LoginScreen";
 import HomeScreen from "./components/HomeScreen";
 import Game from "./components/Game";
@@ -899,39 +899,26 @@ export default function Page() {
                   // Issue coupon if score qualifies
                   if (finalScore >= MIN_SCORE_FOR_COUPON && isFreePlay) {
                     try {
-                      const tier = getScoreTier(finalScore);
-                      if (tier) {
-                        const expiresAt = getExpiresAt(tier.expiryDays);
-                        let couponCode: string | null = null;
-                        let lastError: unknown = null;
-                        for (let attempt = 0; attempt < 5 && !couponCode; attempt++) {
-                          const code = generateCouponCodeClient();
-                          const { error } = await supabase.from("coupons").insert({
-                            code,
-                            user_id: nick || null,
-                            reward_type: "discount",
-                            discount_amount: tier.discountAmount,
-                            status: "unused",
-                            expires_at: expiresAt.toISOString(),
-                          });
-                          if (!error) {
-                            couponCode = code;
-                          } else {
-                            lastError = error;
-                            console.error("Coupon insert attempt", attempt + 1, "failed:", JSON.stringify(error));
-                            if (error.code !== "23505") break;
-                          }
-                        }
-                        if (couponCode) {
-                          setEarnedCouponCode(couponCode);
-                          setCouponDebugError(null);
-                        } else {
-                          const errMsg = lastError ? JSON.stringify(lastError) : "unknown error";
-                          console.error("Coupon issuance failed. Last error:", errMsg);
-                          setCouponDebugError(errMsg);
-                        }
+                      const res = await fetch("/api/coupons/issue", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          userId: nick || undefined,
+                          score: finalScore,
+                        }),
+                      });
+                      const data = await res.json().catch(() => ({}));
+
+                      if (res.ok && data?.success && data?.coupon?.code) {
+                        setEarnedCouponCode(data.coupon.code);
+                        setCouponDebugError(null);
                       } else {
-                        setCouponDebugError(`No tier for score ${finalScore}`);
+                        const errMsg =
+                          data?.error ||
+                          data?.reason ||
+                          `Coupon issue failed with status ${res.status}`;
+                        console.error("Coupon issuance failed:", errMsg, data);
+                        setCouponDebugError(String(errMsg));
                       }
                     } catch (e) {
                       console.error("Coupon issue error:", e);
